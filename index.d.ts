@@ -3,7 +3,7 @@ export type EffectEvent = 'onBefore' | 'onSuccess' | 'onError' | 'onFinally';
 export type Effect<Args extends any[], Result> = {
     (...args: Args): Promise<Result>;
     onSuccess: (callback: (result: Result, ...args: Args) => void) => void;
-    onError: (callback: (error: any, ...args: Args) => void) => void;
+    onError: (callback: (error: unknown, ...args: Args) => void) => void;
     onFinally: (callback: (...args: Args) => void) => void;
     onBefore: (callback: (...args: Args) => void) => void;
 };
@@ -14,8 +14,8 @@ export type Store<State> = {
     set: (newState: State) => void;
     on: <Args extends any[], Result>(effect: Effect<Args, Result>, event: EffectEvent, handler: (state: State, payload: {
         result?: Result;
-        error?: any;
-        meta: Args;
+        error?: unknown;
+        args: Args;
     }) => State) => Store<State>;
     subscribe: (listener: Listener<State>) => () => void;
 };

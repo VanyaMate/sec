@@ -4,7 +4,7 @@ export type EffectEvent = 'onBefore' | 'onSuccess' | 'onError' | 'onFinally';
 export type Effect<Args extends any[], Result> = {
     (...args: Args): Promise<Result>;
     onSuccess: (callback: (result: Result, ...args: Args) => void) => void;
-    onError: (callback: (error: any, ...args: Args) => void) => void;
+    onError: (callback: (error: unknown, ...args: Args) => void) => void;
     onFinally: (callback: (...args: Args) => void) => void;
     onBefore: (callback: (...args: Args) => void) => void;
 };
@@ -14,10 +14,10 @@ export type Listener<State> = (state: State) => void;
 export function effect<Args extends any[], Result> (fn: EffectFunction<Args, Result>): Effect<Args, Result> {
     let beforeListeners: ((...args: Args) => void)[]                  = [];
     let successListeners: ((result: Result, ...args: Args) => void)[] = [];
-    let errorListeners: ((error: any, ...args: Args) => void)[]       = [];
+    let errorListeners: ((error: unknown, ...args: Args) => void)[]   = [];
     let finallyListeners: ((...args: Args) => void)[]                 = [];
 
-    const wrappedEffect: any = async (...args: Args) => {
+    const wrappedEffect: Effect<Args, Result> = async (...args: Args) => {
         beforeListeners.forEach(listener => listener(...args));
         try {
             const result = await fn(...args);
@@ -39,7 +39,7 @@ export function effect<Args extends any[], Result> (fn: EffectFunction<Args, Res
         successListeners.push(callback);
     };
 
-    wrappedEffect.onError = (callback: (error: any, ...args: Args) => void) => {
+    wrappedEffect.onError = (callback: (error: unknown, ...args: Args) => void) => {
         errorListeners.push(callback);
     };
 
@@ -47,7 +47,7 @@ export function effect<Args extends any[], Result> (fn: EffectFunction<Args, Res
         finallyListeners.push(callback);
     };
 
-    return wrappedEffect as Effect<Args, Result>;
+    return wrappedEffect;
 }
 
 export type Store<State> = {
@@ -58,8 +58,8 @@ export type Store<State> = {
         event: EffectEvent,
         handler: (state: State, payload: {
             result?: Result;
-            error?: any;
-            meta: Args
+            error?: unknown;
+            args: Args
         }) => State,
     ) => Store<State>;
     subscribe: (listener: Listener<State>) => () => void;
@@ -80,27 +80,27 @@ export function store<State> (initialState: State): Store<State> {
         event: EffectEvent,
         handler: (state: State, payload: {
             result?: Result;
-            error?: any;
-            meta: Args
+            error?: unknown;
+            args: Args
         }) => State,
     ): Store<State> => {
         const callback = (payload: {
             result?: Result;
-            error?: any;
-            meta: Args
+            error?: unknown;
+            args: Args
         }) => set(handler(state, payload));
 
         if (event === 'onBefore') {
-            effect.onBefore((...args) => callback({ meta: args }));
+            effect.onBefore((...args) => callback({ args }));
         } else if (event === 'onSuccess') {
             effect.onSuccess((result, ...args) => callback({
                 result,
-                meta: args,
+                args,
             }));
         } else if (event === 'onError') {
-            effect.onError((error, ...args) => callback({ error, meta: args }));
+            effect.onError((error, ...args) => callback({ error, args }));
         } else if (event === 'onFinally') {
-            effect.onFinally((...args) => callback({ meta: args }));
+            effect.onFinally((...args) => callback({ args }));
         }
 
         return storeApi;
@@ -108,7 +108,12 @@ export function store<State> (initialState: State): Store<State> {
 
     const subscribe = (listener: Listener<State>) => {
         listeners.push(listener);
-        return () => listeners = listeners.filter((l) => l !== listener);
+        return () => {
+            const index = listeners.indexOf(listener);
+            if (index !== -1) {
+                listeners.splice(index, 1);
+            }
+        };
     };
 
     const storeApi = {
@@ -127,7 +132,7 @@ export function combine<States extends any[], Result> (
 ): Store<Result> {
     let combinedState: Result = callback(...stores);
 
-    stores.forEach((store, index) => {
+    stores.forEach((store) => {
         store.subscribe(() => {
             combinedState = callback(...stores);
             listeners.forEach(listener => listener(combinedState));
