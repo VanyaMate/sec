@@ -2,6 +2,10 @@
 
 Tiny state manager
 
+```
+npm i @vanyamate/sec
+```
+
 ```typescript
 import { store, effect, combine } from './index';
 
