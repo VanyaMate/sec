@@ -121,28 +121,43 @@ export function store<State> (initialState: State): Store<State> {
     return storeApi;
 }
 
-export function combine<States extends any[]> (...stores: { [K in keyof States]: Store<States[K]> }): Store<States> {
-    let combinedState                         = stores.map(store => store.get()) as States;
-    let combinedListeners: Listener<States>[] = [];
+export function combine<States extends any[], Result> (
+    stores: { [K in keyof States]: Store<States[K]> },
+    callback: (...stores: { [K in keyof States]: Store<States[K]> }) => Result,
+): Store<Result> {
+    let combinedState: Result = callback(...stores);
 
     stores.forEach((store, index) => {
-        store.subscribe((state) => {
-            combinedState[index] = state;
-            combinedListeners.forEach(listener => listener(combinedState));
+        store.subscribe(() => {
+            combinedState = callback(...stores);
+            listeners.forEach(listener => listener(combinedState));
         });
     });
 
-    return {
-        get      : () => combinedState,
-        set      : (newState) => {
-            newState.forEach((state, index) => stores[index].set(state));
+    const listeners: Listener<Result>[] = [];
+
+    const get = () => combinedState;
+
+    const subscribe = (listener: Listener<Result>) => {
+        listeners.push(listener);
+        return () => {
+            const index = listeners.indexOf(listener);
+            if (index !== -1) {
+                listeners.splice(index, 1);
+            }
+        };
+    };
+
+    const storeApi: Store<Result> = {
+        get,
+        set: () => {
+            throw new Error('Cannot call \'set\' on combined store');
         },
-        on       : () => {
+        on : () => {
             throw new Error('Cannot call \'on\' on combined store');
         },
-        subscribe: (listener) => {
-            combinedListeners.push(listener);
-            return () => combinedListeners = combinedListeners.filter((l) => l !== listener);
-        },
+        subscribe,
     };
+
+    return storeApi;
 }

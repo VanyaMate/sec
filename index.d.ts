@@ -20,6 +20,8 @@ export type Store<State> = {
     subscribe: (listener: Listener<State>) => () => void;
 };
 export declare function store<State>(initialState: State): Store<State>;
-export declare function combine<States extends any[]>(...stores: {
+export declare function combine<States extends any[], Result>(stores: {
     [K in keyof States]: Store<States[K]>;
-}): Store<States>;
+}, callback: (...stores: {
+    [K in keyof States]: Store<States[K]>;
+}) => Result): Store<Result>;
