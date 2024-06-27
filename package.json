@@ -1,0 +1,23 @@
+{
+    "name": "@vanyamate/sec",
+    "version": "0.0.1",
+    "description": "SEC. Store, Effect, Combine. Tiny state manager",
+    "scripts": {
+        "g:type": "tsc index.ts --declaration --emitDeclarationOnly"
+    },
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/VanyaMate/sec.git"
+    },
+    "keywords": [
+        "state",
+        "manager"
+    ],
+    "author": "Vanya Mate",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/VanyaMate/sec/issues"
+    },
+    "homepage": "https://github.com/VanyaMate/sec#readme"
+}
