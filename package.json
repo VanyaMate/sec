@@ -1,11 +1,12 @@
 {
     "name": "@vanyamate/sec",
-    "version": "0.0.6",
+    "version": "0.0.8",
     "description": "SEC. Store, Effect, Combine. Tiny state manager",
     "scripts": {
         "g:type": "tsc index.ts --declaration --emitDeclarationOnly"
     },
-    "types": "index.d.ts",
+    "main": "./index.ts",
+    "types": "./index.d.ts",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/VanyaMate/sec.git"

@@ -1,4 +1,5 @@
 export type EffectFunction<Args extends any[], Result> = (...args: Args) => Promise<Result>;
+export type EffectEvent = 'onBefore' | 'onSuccess' | 'onError' | 'onFinally';
 
 export type Effect<Args extends any[], Result> = {
     (...args: Args): Promise<Result>;
@@ -54,7 +55,7 @@ export type Store<State> = {
     set: (newState: State) => void;
     on: <Args extends any[], Result>(
         effect: Effect<Args, Result>,
-        event: 'onBefore' | 'onSuccess' | 'onError' | 'onFinally',
+        event: EffectEvent,
         handler: (state: State, payload: {
             result?: Result;
             error?: any;
@@ -76,7 +77,7 @@ export function store<State> (initialState: State): Store<State> {
 
     const on = <Args extends any[], Result> (
         effect: Effect<Args, Result>,
-        event: 'onBefore' | 'onSuccess' | 'onError' | 'onFinally',
+        event: EffectEvent,
         handler: (state: State, payload: {
             result?: Result;
             error?: any;
