@@ -1,6 +1,6 @@
 {
     "name": "@vanyamate/sec",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "SEC. Store, Effect, Combine. Tiny state manager",
     "scripts": {
         "g:type": "tsc index.ts --declaration --emitDeclarationOnly"

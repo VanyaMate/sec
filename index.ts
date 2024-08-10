@@ -10,6 +10,12 @@ export type Effect<Args extends any[], Result> = {
 };
 
 export type Listener<State> = (state: State) => void;
+export type Payload<Result, Args> = {
+    result?: Result;
+    error?: unknown;
+    args: Args;
+};
+export type Handler<State, Args, Result> = (state: State, payload: Payload<Result, Args>) => State;
 
 export function effect<Args extends any[], Result> (fn: EffectFunction<Args, Result>): Effect<Args, Result> {
     let beforeListeners: ((...args: Args) => void)[]                  = [];
@@ -56,11 +62,7 @@ export type Store<State> = {
     on: <Args extends any[], Result>(
         effect: Effect<Args, Result>,
         event: EffectEvent,
-        handler: (state: State, payload: {
-            result?: Result;
-            error?: unknown;
-            args: Args
-        }) => State,
+        handler: Handler<State, Args, Result>,
     ) => Store<State>;
     subscribe: (listener: Listener<State>) => () => void;
 };
@@ -78,17 +80,9 @@ export function store<State> (initialState: State): Store<State> {
     const on = <Args extends any[], Result> (
         effect: Effect<Args, Result>,
         event: EffectEvent,
-        handler: (state: State, payload: {
-            result?: Result;
-            error?: unknown;
-            args: Args
-        }) => State,
+        handler: Handler<State, Args, Result>,
     ): Store<State> => {
-        const callback = (payload: {
-            result?: Result;
-            error?: unknown;
-            args: Args
-        }) => set(handler(state, payload));
+        const callback = (payload: Payload<Result, Args>) => set(handler(state, payload));
 
         if (event === 'onBefore') {
             effect.onBefore((...args) => callback({ args }));
