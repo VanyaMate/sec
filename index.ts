@@ -86,7 +86,7 @@ export function store<State> (initialState: State): Store<State> {
         event: EffectEvent,
         handler: Handler<State, Args, Result>,
     ): Store<State> => {
-        const callback = (payload: Payload<Result, Args>) => storeApi.set(handler(state, payload));
+        const callback = (payload: Payload<Result, Args>) => set(handler(state, payload));
 
         if (event === 'onBefore') {
             effect.onBefore((...args) => callback({ args }));

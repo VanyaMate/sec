@@ -41,7 +41,7 @@ export function store(initialState) {
         listeners.forEach(listener => listener(state));
     };
     const on = (effect, event, handler) => {
-        const callback = (payload) => storeApi.set(handler(state, payload));
+        const callback = (payload) => set(handler(state, payload));
         if (event === 'onBefore') {
             effect.onBefore((...args) => callback({ args }));
         }
