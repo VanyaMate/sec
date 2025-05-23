@@ -5,6 +5,7 @@ Tiny state manager
 *will be slightly revised in the future*
 
 
+For react/preact/svelte/qwik/solid
 ```
 npm i @vanyamate/sec
 ```
@@ -13,9 +14,10 @@ with
 npm i @vanyamate/sec-react
 npm i @vanyamate/sec-solidjs
 ```
-or
+
+
+For vue
 ```
-// Only for Vue (without "combine")
 npm i @vanyamate/sec-vue
 ```
 
@@ -27,8 +29,19 @@ npm i @vanyamate/sec-vue
 const getUserPosts = function (userId: string): Promise<Array<Post>> {
   return fetch(`${__API__}/v1/user-posts/${userId}`).then((response) => response.json());
 }
+```
 
-const get
+```typescript
+// src/actions/auth
+const logout = function (): Promise<LogoutData> {
+  return fetch(`${__API__}/v1/auth/logout`, { method: 'POST' }).then((response) => response.json());
+}
+```
+
+```typescript
+// src/model/auth
+
+const logoutEffect = effect(logout);
 ```
 
 ```typescript
@@ -42,7 +55,8 @@ const $userPostsIsPending = store(false)
   .on(getUserPostsEffect, 'onFinally', () => false);
 
 const $userPosts = store<Array<Post>>([])
-  .on(getUserPostsEffect, 'onSuccess', (_, { result }) => result);
+  .on(getUserPostsEffect, 'onSuccess', (_, { result }) => result),
+  .on(logoutEffect, 'onSuccess', () => []);
 ```
 
 ```typescript
@@ -81,7 +95,8 @@ const errorHandler = async function (error: unknown): Notification {
 const errorHandlerEffect = effect(errorHandler);
 
 const $notifications = store<Array<Notification>>([])
-  .on(errorHandlerEffect, 'onSuccess', (state, { result }) => state.concat(result));
+  .on(errorHandlerEffect, 'onSuccess', (state, { result }) => state.concat(result)),
+  .on(logoutEffect, 'onSuccess', () => []);
 ```
 
 ```typescript
