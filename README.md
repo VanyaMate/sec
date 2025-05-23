@@ -77,7 +77,7 @@ const $notifications = store<Array<Notification>>([])
 ```typescript
 // src/main.tsx
 import { getUserPostsEffect, $userPostsIsPending, $userPosts, errorHandlerEffect, $notifications } from '@/models';
-import { UserPosts } from '@/entity;
+import { UserPosts } from '@/entity';
 import { Toaster } from '@/shared';
 
 export const App = function ({ userId }) {
