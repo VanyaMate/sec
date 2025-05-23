@@ -27,14 +27,14 @@ npm i @vanyamate/sec-vue
 ```typescript
 // src/actions/user-posts
 const getUserPosts = function (userId: string): Promise<Array<Post>> {
-  return fetch(`${__API__}/v1/user-posts/${userId}`).then((response) => response.json());
+  // return posts
 }
 ```
 
 ```typescript
 // src/actions/auth
 const logout = function (): Promise<LogoutData> {
-  return fetch(`${__API__}/v1/auth/logout`, { method: 'POST' }).then((response) => response.json());
+  // logout handler
 }
 ```
 
@@ -55,7 +55,7 @@ const $userPostsIsPending = store(false)
   .on(getUserPostsEffect, 'onFinally', () => false);
 
 const $userPosts = store<Array<Post>>([])
-  .on(getUserPostsEffect, 'onSuccess', (_, { result }) => result),
+  .on(getUserPostsEffect, 'onSuccess', (_, { result }) => result)
   .on(logoutEffect, 'onSuccess', () => []);
 ```
 
@@ -63,39 +63,14 @@ const $userPosts = store<Array<Post>>([])
 // src/models/notifications
 import { store } from '@vanyamate/sec';
 
-enum NotificationType {
-  ERR,
-  WARN,
-  SUC,
-}
-
 const errorHandler = async function (error: unknown): Notification {
-  // code..
-  if (error instanceof Error) {
-    return {
-      type: NotificationType.ERR,
-      title: 'Error',
-      message: error.message,
-    }
-  } else if (isDomainError(error) {
-    return {
-      type: NotificationType.ERR,
-      title: error.title,
-      message: error.message
-    }
-  } else {
-    return {
-      type: NotificationType.ERR,
-      title: 'Error',
-      message: JSON.stringify(error)
-    }
-  }
+  // transform error to notification
 }
 
 const errorHandlerEffect = effect(errorHandler);
 
 const $notifications = store<Array<Notification>>([])
-  .on(errorHandlerEffect, 'onSuccess', (state, { result }) => state.concat(result)),
+  .on(errorHandlerEffect, 'onSuccess', (state, { result }) => state.concat(result))
   .on(logoutEffect, 'onSuccess', () => []);
 ```
 
