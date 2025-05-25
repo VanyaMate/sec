@@ -1,29 +1,88 @@
-export type EffectFunction<Args extends any[], Result> = (...args: Args) => Promise<Result>;
-export type EffectEvent = 'onBefore' | 'onSuccess' | 'onError' | 'onFinally';
-export type Effect<Args extends any[], Result> = {
-    (...args: Args): Promise<Result>;
-    onSuccess: (callback: (result: Result, ...args: Args) => void) => void;
-    onError: (callback: (error: unknown, ...args: Args) => void) => void;
-    onFinally: (callback: (...args: Args) => void) => void;
-    onBefore: (callback: (...args: Args) => void) => void;
+export declare const combine: <State, States extends Array<any>>(stores: { [Index in keyof States]: Store<States[Index]>; }, callback: (...stores: { [K in keyof States]: Store<States[K]>; }) => State, enabled?: boolean) => Store<State>;
+
+export declare type Effect<AsyncAction extends EffectAction> = {
+    (...args: Parameters<AsyncAction>): Promise<Awaited<ReturnType<AsyncAction>>>;
+    onSuccess: (callback: EffectSuccessCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
+    onError: (callback: EffectErrorCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
+    onBefore: (callback: EffectBeforeCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
+    onFinally: (callback: EffectFinallyCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
 };
-export type Listener<State> = (state: State) => void;
-export type Payload<Result, Args> = {
-    result?: Result;
-    error?: unknown;
-    args: Args;
+
+export declare const effect: <Action extends EffectAction>(action: Action) => Effect<Action>;
+
+export declare type EffectAction = (...args: Array<any>) => Promise<any>;
+
+export declare type EffectBeforeCallback<AsyncAction extends EffectAction> = (...args: Parameters<AsyncAction>) => void;
+
+export declare type EffectCallbackList<Type> = {
+    beforeAll: Array<Type>;
+    afterAll: Array<Type>;
+    other: Array<Type>;
 };
-export type Handler<State, Args, Result> = (state: State, payload: Payload<Result, Args>) => State;
-export declare function effect<Args extends any[], Result>(fn: EffectFunction<Args, Result>): Effect<Args, Result>;
-export type Store<State> = {
+
+export declare type EffectErrorCallback<AsyncAction extends EffectAction> = (error: unknown, ...args: Parameters<AsyncAction>) => void;
+
+export declare type EffectFinallyCallback<AsyncAction extends EffectAction> = (...args: Parameters<AsyncAction>) => void;
+
+export declare type EffectSubscribePosition = 'beforeAll' | 'afterAll' | undefined;
+
+export declare type EffectSuccessCallback<AsyncAction extends EffectAction> = (result: Awaited<ReturnType<AsyncAction>>, ...args: Parameters<AsyncAction>) => void;
+
+export declare const enableCheck: (enabled: boolean, callback: () => void) => void;
+
+export declare type Marker<State> = {
+    on: <Action extends EffectAction>(event: keyof StoreHandlerMap<State, Action>, effect: Effect<Action>, position?: EffectSubscribePosition) => Marker<State>;
+    subscribe: (listener: MarkerListener) => void;
+};
+
+export declare const marker: <State>(position?: EffectSubscribePosition) => Marker<State>;
+
+export declare type MarkerListener = () => void;
+
+export declare const pending: (effects: Array<Effect<any>>) => Store<boolean>;
+
+export declare type Store<State> = {
+    on: StoreEffectSubscribe<State>;
+    enableOn: StoreMarkerSubscribe<State>;
+    disableOn: StoreMarkerSubscribe<State>;
     get: () => State;
-    set: (newState: State) => void;
-    on: <Args extends any[], Result>(effect: Effect<Args, Result>, event: EffectEvent, handler: Handler<State, Args, Result>) => Store<State>;
-    subscribe: (listener: Listener<State>) => () => void;
+    set: (data: State) => void;
+    subscribe: (listener: StoreListener<State>) => () => void;
 };
-export declare function store<State>(initialState: State): Store<State>;
-export declare function combine<States extends any[], Result>(stores: {
-    [K in keyof States]: Store<States[K]>;
-}, callback: (...stores: {
-    [K in keyof States]: Store<States[K]>;
-}) => Result): Store<Result>;
+
+export declare const store: <State extends any>(initialData: State, enabled?: boolean) => Store<State>;
+
+export declare type StoreEffectSubscribe<State> = <Action extends EffectAction, Event extends keyof StoreHandlerMap<State, Action>>(effect: Effect<Action>, event: Event, handler: StoreHandlerMap<State, Action>[Event]) => Store<State>;
+
+export declare type StoreHandlerMap<State, Action extends EffectAction> = {
+    onBefore: StoreOnBeforeHandler<State, Action>;
+    onSuccess: StoreOnSuccessHandler<State, Action>;
+    onError: StoreOnErrorHandler<State, Action>;
+    onFinally: StoreOnFinallyHandler<State, Action>;
+};
+
+export declare type StoreListener<State> = (state: State) => void;
+
+export declare type StoreMarkerSubscribe<State> = (marker: Marker<State>) => Store<State>;
+
+export declare type StoreOnBeforeHandler<State, Action extends EffectAction> = (state: State, data: {
+    args: Parameters<Action>;
+}) => State;
+
+export declare type StoreOnErrorHandler<State, Action extends EffectAction> = (state: State, data: {
+    args: Parameters<Action>;
+    error: unknown;
+}) => State;
+
+export declare type StoreOnFinallyHandler<State, Action extends EffectAction> = (state: State, data: {
+    args: Parameters<Action>;
+}) => State;
+
+export declare type StoreOnSuccessHandler<State, Action extends EffectAction> = (state: State, data: {
+    args: Parameters<Action>;
+    result: Awaited<ReturnType<Action>>;
+}) => State;
+
+export declare const to: <State>(state: State) => () => State;
+
+export { }
