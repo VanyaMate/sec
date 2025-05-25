@@ -68,6 +68,8 @@ const logoutMarker = marker('afterAll').on('onSuccess', logoutEffect);
 
 ```
 
+order of execution: 'beforeAll' -> undefined -> 'afterAll' (within one type (for example `onSuccess`))
+
 ### to
 
 Just helper. Returns a function that returns the passed value.
@@ -172,21 +174,22 @@ const posts = store<Array<Post>>([])
 
 ### Types
 
-instead of writing everything in `.on` - you can take out the handlers separately, setting the required type for them. `StoreEffectEventMap` is a generic and takes 2 parameters, and then the type is selected.
+instead of writing everything in `.on` - you can take out the handlers separately, setting the required type for them.
+`StoreEffectEventMap` is a generic and takes 2 parameters, and then the type is selected.
 
 ```typescript
 // Example:
 
 const getRandomId = async function () {
-  return { id: Math.random() };
+    return { id: Math.random() };
 };
 
 const getRandomEffect = effect(getRandomId);
 
 const handler: StoreHandlerMap<number, typeof getRandomId>['onSuccess'] = function (state, { result }) {
-  return result.id;
+    return result.id;
 };
 
 const num = store<number>(0)
-        .on(getRandomEffect, 'onSuccess', handler);
+    .on(getRandomEffect, 'onSuccess', handler);
 ```
