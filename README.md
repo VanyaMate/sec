@@ -2,117 +2,191 @@
 
 Tiny state manager
 
-*will be slightly revised in the future*
-
+*It may change in the future*
 
 For react/preact/svelte/qwik/solid
+
 ```
 npm i @vanyamate/sec
 ```
+
 with
+
 ```
 npm i @vanyamate/sec-react
 npm i @vanyamate/sec-solidjs
 ```
 
+For vue (like old 0.1.5 version)
 
-For vue
 ```
 npm i @vanyamate/sec-vue
 ```
 
-## Old Example:
+## Documentation:
+
+### effect
+
+Effect is a wrapper around action. Action is any asynchronous action. Store subscribes to effect. Effect can be called
+from anywhere in the code.
+
+Effect takes one value - action.
 
 ```typescript
-import { store, effect, combine } from './index';
 
-const sum = async (a, b) => a + b;
+const loginAction = async function (loginData: LoginData): Promise<UserData> {
+    // login action.. (fetch, etc.)
+    return fetch(`${ __API__ }/v1/auth`, {
+        method: 'POST',
+        body  : JSON.stringify(loginData),
+    })
+        .then((response) => response.json());
+};
 
-// Create effect
-const sumEffect = effect(sum);
+const loginEffect = effect(loginAction);
 
-// Create stores
-const allSums = store(0).on(sumEffect, 'onSuccess', (state, { result }) => state + result);
-const lastSum = store(0).on(sumEffect, 'onSuccess', (_, { result }) => result);
-
-// Create combine
-const bothSum = combine([ allSums, lastSum ], (...args) => args.reduce((acc, item) => acc + item.get(), 0));
+// Anywhere in code
+loginEffect();
 
 ```
 
+### marker
 
-## New Example:
+markers are needed to enable/disable the store. markers also subscribe to the effect. marker takes 1 value of the
+subscription type. `afterAll`, `beforeAll` or `undefined`
+
+The marker has an api.
+
+- `on` - subscribe to effect. takes 2 parameters. type (`onBefore`, `onSuccess`, `onError` and `onFinally`) and effect.
+  after effect is triggered, all listeners that were set via `subscribe` are triggered.
+- `subscribe` - adds a handler that will be triggered when any effect of the required type is executed.
 
 ```typescript
-// src/actions/user-posts
-const getUserPosts = function (userId: string): Promise<Array<Post>> {
-  // return posts
-}
+
+const loginMarker  = marker('beforeAll').on('onSuccess', loginEffect);
+const logoutMarker = marker('afterAll').on('onSuccess', logoutEffect);
+
 ```
 
+### to
+
+Just helper. Returns a function that returns the passed value.
+
 ```typescript
-// src/actions/auth
-const logout = function (): Promise<LogoutData> {
-  // logout handler
-}
+
+to(123); // Return () => 123
+
 ```
 
-```typescript
-// src/model/auth
+### pending
 
-const logoutEffect = effect(logout);
+Just helper. wrapper over store. returns a bool value and is used to create a pending-store.
+
+### store
+
+Store stores data and subscribes to effect.
+
+When initializing, the store takes 2 values. The first value is the initialization data. The second value is optional -
+enable/disable. When disabled, the store will not be updated.
+
+The store has an api.
+
+- `on` - subscription to effect. takes 3 parameters. effect, type (`onBefore`, `onSuccess`, `onError` and `onFinally`)
+  and handler. handler has signature depending on type. handler is a function that takes 2 parameters and should always
+  return value of the type that is currently specified in store. first parameter is current state of store, and the
+  second is an object and depends on subscription type. for `onBefore` it is only `{ args }` where `args` is an array of
+  arguments of the function that we passed to effect. for `onSuccess` it is `{ args, result }` where `result` is result
+  of `Promise` execution. for `onError` `{ args, error }` where `error` is `unknown`. and for `onFinally` it is
+  `{ args }`.
+    - `onBefore` - `(state, { args }) => state`
+    - `onSuccess` - `(state, { args, result }) => state`
+    - `onError` - `(state, { args, error }) => state`
+    - `onFinally` - `(state, { args }) => state`
+- `get` - get current store value.
+- `set` - set new value
+- `subscribe` - receives a function as input that will be executed when the store changes and returns an unsubscribe
+  function.
+- `enableOn` - receives a marker that, when triggered, will enable the store.
+- `disableOn` - receives a marker that, when triggered, will disable the store.
+
+```typescript
+
+const authIsPending = store<boolean>(false)
+    .on(loginEffect, 'onBefore', () => true)
+    .on(loginEffect, 'onFinally', to(false)); // instead of () => false
+
+const authError = store<Error | null>(null)
+    .on(loginEffect, 'onError', (_, { error }) => {
+        // For example
+        if (error instanceof Error) {
+            return error;
+        } else {
+            return new Error(error);
+        }
+    });
+
+const authData = store<UserData | null>(null)
+    .on(loginEffect, 'onSuccess', (_, { result }) => result)
+    .on(logoutEffect, 'onSuccess', () => null);
+
+const postsForUserId = store<number>(0)
+    .enableOn(loginMarker)
+    .disableOn(logoutMarker)
+    .on(getPostsForUser, 'onBefore', (_, { args: [ id ] }) => id);
+
+/**
+ *
+ * instead of
+ * const postsIsPending = store<boolean>(false)
+ *  .on(getPostsForUser, 'onBefore', () => true)
+ *  .on(getPostsForUser, 'onFinally', () => false)
+ *  .on(createPostEffect, 'onBefore', () => true)
+ *  .on(createPostEffect, 'onFinally', () => false);
+ *
+ */
+
+const postsIsPending = pending([
+    getPostsForUser,
+    createPostEffect,
+]);
+
+const posts = store<Array<Post>>([])
+    .enableOn(loginMarker)
+    .disableOn(logoutMarker)
+    .on(getPostsForUser, 'onSuccess', (state, { result, args: [ userId ] }) => {
+        if (postsForUserId.get() === userId) {
+            return state.concat(result);
+        } else {
+            return result;
+        }
+    })
+    .on(createPostEffect, 'onSuccess', (state, { result, args: [ userId ] }) => {
+        if (postsForUserId.get() === userId) {
+            return state.concat(result);
+        } else {
+            return state;
+        }
+    })
+    .on(logoutEffect, 'onSuccess', to([]));
 ```
 
-```typescript
-// src/models/user-posts
-import { effect, store } from '@vanyamate/sec';
+### Types
 
-const getUserPostsEffect = effect(getUserPosts);
-
-const $userPostsIsPending = store(false)
-  .on(getUserPostsEffect, 'onBefore', () => true)
-  .on(getUserPostsEffect, 'onFinally', () => false);
-
-const $userPosts = store<Array<Post>>([])
-  .on(getUserPostsEffect, 'onSuccess', (_, { result }) => result)
-  .on(logoutEffect, 'onSuccess', () => []);
-```
+instead of writing everything in `.on` - you can take out the handlers separately, setting the required type for them. `StoreEffectEventMap` is a generic and takes 2 parameters, and then the type is selected.
 
 ```typescript
-// src/models/notifications
-import { store } from '@vanyamate/sec';
+// Example:
 
-const errorHandler = async function (error: unknown): Notification {
-  // transform error to notification
-}
+const getRandomId = async function () {
+  return { id: Math.random() };
+};
 
-const errorHandlerEffect = effect(errorHandler);
+const getRandomEffect = effect(getRandomId);
 
-const $notifications = store<Array<Notification>>([])
-  .on(errorHandlerEffect, 'onSuccess', (state, { result }) => state.concat(result))
-  .on(logoutEffect, 'onSuccess', () => []);
-```
+const handler: StoreHandlerMap<number, typeof getRandomId>['onSuccess'] = function (state, { result }) {
+  return result.id;
+};
 
-```typescript
-// src/main.tsx
-import { getUserPostsEffect, $userPostsIsPending, $userPosts, errorHandlerEffect, $notifications } from '@/models';
-import { UserPosts } from '@/entity';
-import { Toaster } from '@/shared';
-
-export const App = function ({ userId }) {
-  const notifications = useStore($notifications);
-  const userPostsIsPending = useStore($userPostsIsPending);
-  const userPosts = useStore($userPosts);
-
-  useLayoutEffect(() => {
-    getUserPostsEffect(userId).catch(errorHandlerEffect);
-  }, [userId]);
-
-  return (
-    <main>
-      <UserPosts list={ userPosts } pending={ userPostsIsPending } />
-      <Toaster list={ notifications } />
-    </main>
-  );
-}
+const num = store<number>(0)
+        .on(getRandomEffect, 'onSuccess', handler);
 ```

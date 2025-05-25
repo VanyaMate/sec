@@ -1,13 +1,21 @@
 {
     "name": "@vanyamate/sec",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "description": "SEC. Store, Effect, Combine. Tiny state manager",
     "scripts": {
-        "build": "tsc"
+        "build": "vite build",
+        "test": "vitest"
     },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts",
+            "require": "./dist/index.cjs"
+        }
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/VanyaMate/sec.git"
@@ -21,5 +29,10 @@
     "bugs": {
         "url": "https://github.com/VanyaMate/sec/issues"
     },
-    "homepage": "https://github.com/VanyaMate/sec#readme"
+    "homepage": "https://github.com/VanyaMate/sec#readme",
+    "devDependencies": {
+        "vite": "^6.3.5",
+        "vite-plugin-dts": "^4.5.3",
+        "vitest": "^3.1.4"
+    }
 }
