@@ -46,7 +46,7 @@ const loginAction = async function (loginData: LoginData): Promise<UserData> {
 const loginEffect = effect(loginAction);
 
 // Anywhere in code
-loginEffect();
+loginEffect({ login: 'VanyaMate', password: 'qwerty12345' });
 
 ```
 
@@ -174,8 +174,15 @@ const posts = store<Array<Post>>([])
 
 ### Types
 
+#### StoreHandlerMap
+
 instead of writing everything in `.on` - you can take out the handlers separately, setting the required type for them.
-`StoreEffectEventMap` is a generic and takes 2 parameters, and then the type is selected.
+`StoreHandlerMap` is a generic and takes 2 parameters, and then the type is selected.
+first is type of store value. second is action signature. and then select type of subscribe.
+
+```
+StoreHandlerMap<number, typeof getRandomId>['onSuccess']
+```
 
 ```typescript
 // Example:
