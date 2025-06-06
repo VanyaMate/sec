@@ -52,7 +52,7 @@ export const enableCheck = function (enabled: boolean, callback: () => void) {
     }
 };
 
-export const store = function <State extends any> (initialData: State, enabled: boolean = true): Store<State> {
+export const store = function <State extends any> (state: State, enabled: boolean = true): Store<State> {
     const listeners: Array<StoreListener<State>> = [];
 
     const storeApi: Store<State> = {
@@ -64,14 +64,14 @@ export const store = function <State extends any> (initialData: State, enabled: 
                 effect.onBefore((...args) =>
                     enableCheck(
                         enabled,
-                        () => initialData = (handler as StoreOnBeforeHandler<State, Action>)(initialData, { args }),
+                        () => state = (handler as StoreOnBeforeHandler<State, Action>)(state, { args }),
                     ),
                 );
             } else if (event === 'onSuccess') {
                 effect.onSuccess((result, ...args) =>
                     enableCheck(
                         enabled,
-                        () => initialData = (handler as StoreOnSuccessHandler<State, Action>)(initialData, {
+                        () => state = (handler as StoreOnSuccessHandler<State, Action>)(state, {
                             result, args,
                         }),
                     ),
@@ -80,7 +80,7 @@ export const store = function <State extends any> (initialData: State, enabled: 
                 effect.onError((error, ...args) =>
                     enableCheck(
                         enabled,
-                        () => initialData = (handler as StoreOnErrorHandler<State, Action>)(initialData, {
+                        () => state = (handler as StoreOnErrorHandler<State, Action>)(state, {
                             error, args,
                         }),
                     ),
@@ -89,7 +89,7 @@ export const store = function <State extends any> (initialData: State, enabled: 
                 effect.onFinally((...args) =>
                     enableCheck(
                         enabled,
-                        () => initialData = (handler as StoreOnFinallyHandler<State, Action>)(initialData, { args }),
+                        () => state = (handler as StoreOnFinallyHandler<State, Action>)(state, { args }),
                     ),
                 );
             }
@@ -97,10 +97,10 @@ export const store = function <State extends any> (initialData: State, enabled: 
             return storeApi;
         },
         get (): State {
-            return initialData;
+            return state;
         },
         set (value: State) {
-            initialData = value;
+            state = value;
         },
         subscribe (listener: StoreListener<State>) {
             listeners.push(listener);
@@ -112,11 +112,11 @@ export const store = function <State extends any> (initialData: State, enabled: 
             };
         },
         enableOn (marker: Marker<State>) {
-            marker.subscribe(() => enabled = false);
+            marker.subscribe(() => enabled = true);
             return storeApi;
         },
         disableOn (marker: Marker<State>) {
-            marker.subscribe(() => () => enabled = true);
+            marker.subscribe(() => enabled = false);
             return storeApi;
         },
     };

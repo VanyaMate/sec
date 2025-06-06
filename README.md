@@ -80,9 +80,32 @@ to(123); // Return () => 123
 
 ```
 
+```typescript
+// before    .on(logoutEffect, 'onSuccess', () => []);
+// after     .on(logoutEffect, 'onSuccess', to([]));
+```
+
 ### pending
 
 Just helper. wrapper over store. returns a bool value and is used to create a pending-store.
+
+```typescript
+/**
+ *
+ * instead of
+ * const postsIsPending = store<boolean>(false)
+ *  .on(getPostsForUser, 'onBefore', () => true)
+ *  .on(getPostsForUser, 'onFinally', () => false)
+ *  .on(createPostEffect, 'onBefore', () => true)
+ *  .on(createPostEffect, 'onFinally', () => false);
+ *
+ */
+
+const postsIsPending = pending([
+    getPostsForUser,
+    createPostEffect,
+]);
+```
 
 ### store
 

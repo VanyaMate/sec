@@ -50,7 +50,7 @@ export declare type Store<State> = {
     subscribe: (listener: StoreListener<State>) => () => void;
 };
 
-export declare const store: <State extends any>(initialData: State, enabled?: boolean) => Store<State>;
+export declare const store: <State extends any>(state: State, enabled?: boolean) => Store<State>;
 
 export declare type StoreEffectSubscribe<State> = <Action extends EffectAction, Event extends keyof StoreHandlerMap<State, Action>>(effect: Effect<Action>, event: Event, handler: StoreHandlerMap<State, Action>[Event]) => Store<State>;
 
