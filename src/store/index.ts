@@ -64,25 +64,34 @@ export const store = function <State extends any> (state: State, enabled: boolea
                 effect.onBefore((...args) =>
                     enableCheck(
                         enabled,
-                        () => state = (handler as StoreOnBeforeHandler<State, Action>)(state, { args }),
+                        () => {
+                            state = (handler as StoreOnBeforeHandler<State, Action>)(state, { args });
+                            listeners.forEach((listener) => listener(state));
+                        },
                     ),
                 );
             } else if (event === 'onSuccess') {
                 effect.onSuccess((result, ...args) =>
                     enableCheck(
                         enabled,
-                        () => state = (handler as StoreOnSuccessHandler<State, Action>)(state, {
-                            result, args,
-                        }),
+                        () => {
+                            state = (handler as StoreOnSuccessHandler<State, Action>)(state, {
+                                result, args,
+                            });
+                            listeners.forEach((listener) => listener(state));
+                        },
                     ),
                 );
             } else if (event === 'onError') {
                 effect.onError((error, ...args) =>
                     enableCheck(
                         enabled,
-                        () => state = (handler as StoreOnErrorHandler<State, Action>)(state, {
-                            error, args,
-                        }),
+                        () => {
+                            state = (handler as StoreOnErrorHandler<State, Action>)(state, {
+                                error, args,
+                            });
+                            listeners.forEach((listener) => listener(state));
+                        },
                     ),
                 );
             } else {
