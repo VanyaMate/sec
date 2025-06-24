@@ -64,41 +64,40 @@ export const store = function <State extends any> (state: State, enabled: boolea
                 effect.onBefore((...args) =>
                     enableCheck(
                         enabled,
-                        () => {
-                            state = (handler as StoreOnBeforeHandler<State, Action>)(state, { args });
-                            listeners.forEach((listener) => listener(state));
-                        },
+                        () => storeApi.set(
+                            (handler as StoreOnBeforeHandler<State, Action>)(state, { args }),
+                        ),
                     ),
                 );
             } else if (event === 'onSuccess') {
                 effect.onSuccess((result, ...args) =>
                     enableCheck(
                         enabled,
-                        () => {
-                            state = (handler as StoreOnSuccessHandler<State, Action>)(state, {
+                        () => storeApi.set(
+                            (handler as StoreOnSuccessHandler<State, Action>)(state, {
                                 result, args,
-                            });
-                            listeners.forEach((listener) => listener(state));
-                        },
+                            }),
+                        ),
                     ),
                 );
             } else if (event === 'onError') {
                 effect.onError((error, ...args) =>
                     enableCheck(
                         enabled,
-                        () => {
-                            state = (handler as StoreOnErrorHandler<State, Action>)(state, {
+                        () => storeApi.set(
+                            (handler as StoreOnErrorHandler<State, Action>)(state, {
                                 error, args,
-                            });
-                            listeners.forEach((listener) => listener(state));
-                        },
+                            }),
+                        ),
                     ),
                 );
             } else {
                 effect.onFinally((...args) =>
                     enableCheck(
                         enabled,
-                        () => state = (handler as StoreOnFinallyHandler<State, Action>)(state, { args }),
+                        () => storeApi.set(
+                            (handler as StoreOnFinallyHandler<State, Action>)(state, { args }),
+                        ),
                     ),
                 );
             }
@@ -110,6 +109,7 @@ export const store = function <State extends any> (state: State, enabled: boolea
         },
         set (value: State) {
             state = value;
+            listeners.forEach((listener) => listener(state));
         },
         subscribe (listener: StoreListener<State>) {
             listeners.push(listener);
