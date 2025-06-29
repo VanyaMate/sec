@@ -23,9 +23,8 @@ npm i @vanyamate/sec-solidjs
 
 ```tsx
 
-import { effect, store, marker, pending, to } from '@vanyamate/sec';
+import { effect, store, marker, pending, to, result } from '@vanyamate/sec';
 import { useStore } from '@vanyamate/sec-react';
-import { result } from './index';
 
 
 const logout = async function () {
