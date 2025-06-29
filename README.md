@@ -17,13 +17,51 @@ npm i @vanyamate/sec-react
 npm i @vanyamate/sec-solidjs
 ```
 
-For vue (like old 0.1.5 version)
-
-```
-npm i @vanyamate/sec-vue
-```
-
 ## Documentation:
+
+### Example
+
+```tsx
+
+import { effect, store, marker, pending, to } from '@vanyamate/sec';
+import { useStore } from '@vanyamate/sec-react';
+
+
+const logout = async function () {
+    return api('v1/auth/logout', { method: 'POST' });
+};
+
+const getPosts = async function (userId: number): Promise<Array<Post>> {
+    return api(`v1/posts/byUserId/${ userId }`);
+};
+
+const getPostsForUserPageEffect = effect(getPosts);
+const logoutEffect              = effect(logout);
+
+const disableMarker = marker('beforeAll')
+    .on('onBefore', logoutEffect);
+
+const $userPagePostsPending = pending([ getPostsForUserPageEffect ]);
+const $userPagePosts        = store<Array<Post>>([])
+    .disableOn(disableMarker)
+    .on('onBefore', getPostsForUserPageEffect, (_) => to([]))
+    .on('onSuccess', getPostsForUserPageEffect, (_, { result }) => result);
+
+const UserPage = function (userId: number) {
+    const postsPending = useStore($userPagePostsPending);
+    const posts        = useStore($userPagePosts);
+
+    useLayoutEffect(() => {
+        getPostsForUserPageEffect(userId);
+    }, [ userId ]);
+
+    if (postsPending) {
+        return <Loader/>;
+    }
+
+    return posts.map((post) => <Post key={ post.id } post={ post }/>);
+};
+```
 
 ### effect
 
@@ -102,9 +140,9 @@ Just helper. wrapper over store. returns a bool value and is used to create a pe
  */
 
 const postsIsPending = pending([
-    getPostsForUser,
-    createPostEffect,
-]);
+        getPostsForUser,
+        createPostEffect,
+    ]);
 ```
 
 ### store
