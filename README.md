@@ -38,7 +38,7 @@ const getPosts = async function (userId: number): Promise<Array<Post>> {
 const getPostsForUserPageEffect = effect(getPosts);
 const logoutEffect              = effect(logout);
 
-const disableMarker = marker('beforeAll')
+const disableMarker = marker('afterAll')
     .on('onBefore', logoutEffect);
 
 const $userPagePostsPending = pending([ getPostsForUserPageEffect ]);
