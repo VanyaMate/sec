@@ -35,7 +35,7 @@ export type StoreEffectSubscribe<State> =
     ) => Store<State>;
 
 export type StoreListener<State> = (state: State) => void;
-export type StoreMarkerSubscribe<State> = (marker: Marker<State>) => Store<State>;
+export type StoreMarkerSubscribe<State> = (marker: Marker<State>, value?: State) => Store<State>;
 
 export type Store<State> = {
     on: StoreEffectSubscribe<State>;
@@ -120,12 +120,18 @@ export const store = function <State extends any> (state: State, enabled: boolea
                 }
             };
         },
-        enableOn (marker: Marker<State>) {
+        enableOn (marker: Marker<State>, state?: State) {
             marker.subscribe(() => enabled = true);
+            if (state !== undefined) {
+                storeApi.set(state);
+            }
             return storeApi;
         },
-        disableOn (marker: Marker<State>) {
+        disableOn (marker: Marker<State>, state?: State) {
             marker.subscribe(() => enabled = false);
+            if (state !== undefined) {
+                storeApi.set(state);
+            }
             return storeApi;
         },
     };

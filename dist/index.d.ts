@@ -41,6 +41,8 @@ export declare type MarkerListener = () => void;
 
 export declare const pending: (effects: Array<Effect<any>>) => Store<boolean>;
 
+export declare const result: <State, Action extends EffectAction>() => StoreHandlerMap<State, Action>["onSuccess"];
+
 export declare type Store<State> = {
     on: StoreEffectSubscribe<State>;
     enableOn: StoreMarkerSubscribe<State>;
@@ -63,7 +65,7 @@ export declare type StoreHandlerMap<State, Action extends EffectAction> = {
 
 export declare type StoreListener<State> = (state: State) => void;
 
-export declare type StoreMarkerSubscribe<State> = (marker: Marker<State>) => Store<State>;
+export declare type StoreMarkerSubscribe<State> = (marker: Marker<State>, value?: State) => Store<State>;
 
 export declare type StoreOnBeforeHandler<State, Action extends EffectAction> = (state: State, data: {
     args: Parameters<Action>;

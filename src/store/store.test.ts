@@ -1,129 +1,105 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Effect, effect } from '../effect';
 import { store } from './index';
+import { effect } from '../effect';
 import { marker } from '../marker';
 
 // Сгенерировано AI
 
 describe('store()', () => {
-    type State = { count: number };
-    const initialState: State = { count: 0 };
-
-    let incrementEffect: Effect<(x: number) => Promise<number>> = effect(async (x: number) => x);
+    let count: ReturnType<typeof store<number>>;
 
     beforeEach(() => {
-        incrementEffect = effect(async (x: number) => x);
+        count = store(0);
     });
 
     it('returns initial state with get()', () => {
-        const s = store(initialState);
-        expect(s.get()).toEqual({ count: 0 });
+        expect(count.get()).toBe(0);
     });
 
-    it('updates state with set()', () => {
-        const s = store(initialState);
-        s.set({ count: 10 });
-        expect(s.get()).toEqual({ count: 10 });
+    it('sets new state with set()', () => {
+        count.set(10);
+        expect(count.get()).toBe(10);
     });
 
-    it('calls onBefore handler and updates state', async () => {
-        const s = store(initialState);
-
-        s.on(incrementEffect, 'onBefore', (state, { args }) => ({
-            count: state.count + args[0],
-        }));
-
-        await incrementEffect(5);
-
-        expect(s.get()).toEqual({ count: 5 });
+    it('notifies subscribers on set()', () => {
+        const spy = vi.fn();
+        count.subscribe(spy);
+        count.set(5);
+        expect(spy).toHaveBeenCalledWith(5);
     });
 
-    it('calls onSuccess handler and updates state', async () => {
-        const s = store(initialState);
-
-        s.on(incrementEffect, 'onSuccess', (state, { result }) => ({
-            count: state.count + result,
-        }));
-
-        await incrementEffect(7);
-
-        expect(s.get()).toEqual({ count: 7 });
+    it('unsubscribes correctly', () => {
+        const spy   = vi.fn();
+        const unsub = count.subscribe(spy);
+        count.set(1);
+        unsub();
+        count.set(2);
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onError handler and updates state', async () => {
-        const failingEffect = effect(async () => {
+    it('updates via onBefore from effect', async () => {
+        const fx = effect(async (n: number) => n * 2);
+        count.on(fx, 'onBefore', (state, { args }) => state + args[0]);
+        await fx(3);
+        expect(count.get()).toBe(3); // 0 + 3
+    });
+
+    it('updates via onSuccess from effect', async () => {
+        const fx = effect(async (n: number) => n + 1);
+        count.on(fx, 'onSuccess', (state, { result }) => result * 10);
+        await fx(4);
+        expect(count.get()).toBe(50); // (4+1) * 10
+    });
+
+    it('updates via onError from effect', async () => {
+        const fx = effect(async () => {
             throw new Error('fail');
         });
-
-        const s = store(initialState);
-
-        s.on(failingEffect, 'onError', (state, { error }) => {
-            if (error instanceof Error && error.message === 'fail') {
-                return { count: state.count + 1 };
-            }
-            return state;
+        count.on(fx, 'onError', (state, { error }) => {
+            if (error instanceof Error) return -1;
+            return -999;
         });
 
-        try {
-            await failingEffect();
-        } catch (_) {
-        }
-
-        expect(s.get()).toEqual({ count: 1 });
+        await expect(fx()).rejects.toThrow();
+        expect(count.get()).toBe(-1);
     });
 
-    it('calls onFinally handler and updates state', async () => {
-        const s = store(initialState);
-
-        s.on(incrementEffect, 'onFinally', (state, { args }) => ({
-            count: state.count + args[0],
-        }));
-
-        await incrementEffect(3);
-
-        expect(s.get()).toEqual({ count: 3 });
+    it('updates via onFinally from effect', async () => {
+        const fx = effect(async (n: number) => n * 2);
+        count.on(fx, 'onFinally', (state, { args }) => state + args[0]);
+        await fx(4);
+        expect(count.get()).toBe(4); // 0 + 4
     });
 
-    it('notifies subscribers on state change', () => {
-        const s        = store(initialState);
-        const listener = vi.fn();
-        s.subscribe(listener);
-
-        s.set({ count: 123 });
-        expect(listener).toHaveBeenCalledWith({ count: 123 });
+    it('respects enabled=false and blocks effect updates', async () => {
+        const fx            = effect(async (n: number) => n);
+        const disabledStore = store(0, false);
+        disabledStore.on(fx, 'onSuccess', (state, { result }) => result + 1);
+        await fx(10);
+        expect(disabledStore.get()).toBe(0); // update blocked
     });
 
-    it('unsubscribes listener', () => {
-        const s           = store(initialState);
-        const listener    = vi.fn();
-        const unsubscribe = s.subscribe(listener);
+    it('enableOn() re-enables updates via marker', async () => {
+        const m             = marker<number>();
+        const fx            = effect(async (n: number) => n);
+        const disabledStore = store(0, false).on(fx, 'onSuccess', (state, { result }) => result);
 
-        unsubscribe();
-        s.set({ count: 1 });
+        disabledStore.enableOn(m, 5); // enables + sets to 5
+        m.on('onBefore', fx);
 
-        expect(listener).not.toHaveBeenCalled();
+        await fx(42);
+        expect(disabledStore.get()).toBe(42);
     });
 
-    it('disables and enables effect via marker', async () => {
-        const s = store(initialState);
-        const m = marker<State>();
+    it('disableOn() disables updates via marker', async () => {
+        const m = marker<number>();
+        const e = effect(async (n: number) => n);
+        const s = store(0, true).on(e, 'onSuccess', (state, { result }) => result);
 
-        // Handler зависит от enabled-флага
-        s.on(incrementEffect, 'onSuccess', (state, { result }) => ({
-            count: result,
-        }));
+        s.disableOn(m, -100); // disables + sets to -100
+        m.on('onBefore', e);
 
-        s.disableOn(m); // subscribe → enabled = false
-
-        // marker активируется от вызова effect через onBefore
-        m.on('onBefore', incrementEffect);
-
-        await incrementEffect(100); // не должен изменить состояние
-        expect(s.get()).toEqual({ count: 0 });
-
-        s.enableOn(m); // subscribe → enabled = true
-
-        await incrementEffect(200); // теперь должен примениться
-        expect(s.get()).toEqual({ count: 200 });
+        await expect(e(10)).resolves.toBe(10);
+        expect(s.get()).toBe(-100); // should remain unchanged
     });
 });

@@ -1,6 +1,6 @@
 {
     "name": "@vanyamate/sec",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "SEC. Store, Effect, Combine. Tiny state manager",
     "scripts": {
         "build": "vite build",

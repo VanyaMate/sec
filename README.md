@@ -25,6 +25,7 @@ npm i @vanyamate/sec-solidjs
 
 import { effect, store, marker, pending, to } from '@vanyamate/sec';
 import { useStore } from '@vanyamate/sec-react';
+import { result } from './index';
 
 
 const logout = async function () {
@@ -41,11 +42,12 @@ const logoutEffect              = effect(logout);
 const disableMarker = marker('afterAll')
     .on('onBefore', logoutEffect);
 
-const $userPagePostsPending = pending([ getPostsForUserPageEffect ]);
+const $userPagePostsPending = pending([ getPostsForUserPageEffect ])
+    .disableOn(disableMarker, false);
 const $userPagePosts        = store<Array<Post>>([])
-    .disableOn(disableMarker)
-    .on('onBefore', getPostsForUserPageEffect, (_) => to([]))
-    .on('onSuccess', getPostsForUserPageEffect, (_, { result }) => result);
+    .disableOn(disableMarker, [])
+    .on('onBefore', getPostsForUserPageEffect, to([]))
+    .on('onSuccess', getPostsForUserPageEffect, result());
 
 const UserPage = function (userId: number) {
     const postsPending = useStore($userPagePostsPending);
@@ -121,6 +123,15 @@ to(123); // Return () => 123
 ```typescript
 // before    .on(logoutEffect, 'onSuccess', () => []);
 // after     .on(logoutEffect, 'onSuccess', to([]));
+```
+
+### result
+
+Just helper. Returns a function that returns the returned value from action
+
+```typescript
+// before    .on(logoutEffect, 'onSuccess', (_, { result ) => result);
+// after     .on(logoutEffect, 'onSuccess', result());
 ```
 
 ### pending
