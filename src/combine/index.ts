@@ -7,16 +7,19 @@ import { Marker } from '../marker';
 
 export const combine = function <State, States extends Array<any>> (
     stores: { [Index in keyof States]: Store<States[Index]> },
-    callback: (...stores: { [K in keyof States]: Store<States[K]> }) => State,
+    callback: (stores: { [K in keyof States]: Store<States[K]> }) => State,
     enabled: boolean = true,
 ): Store<State> {
-    let combinedState: State                     = callback(...stores);
+    console.log('Combine', stores, callback, enabled);
+
+
+    let combinedState: State                     = callback(stores);
     const listeners: Array<StoreListener<State>> = [];
 
     stores.forEach((store) => {
         store.subscribe(() => {
             enableCheck(enabled, () => {
-                combinedState = callback(...stores);
+                combinedState = callback(stores);
                 listeners.forEach((listener) => listener(combinedState));
             });
         });
@@ -42,11 +45,11 @@ export const combine = function <State, States extends Array<any>> (
             };
         },
         enableOn (marker: Marker<State>) {
-            marker.subscribe(() => enabled = false);
+            marker.subscribe(() => enabled = true);
             return storeApi;
         },
         disableOn (marker: Marker<State>) {
-            marker.subscribe(() => enabled = true);
+            marker.subscribe(() => enabled = false);
             return storeApi;
         },
     };

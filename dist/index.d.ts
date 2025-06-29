@@ -1,4 +1,4 @@
-export declare const combine: <State, States extends Array<any>>(stores: { [Index in keyof States]: Store<States[Index]>; }, callback: (...stores: { [K in keyof States]: Store<States[K]>; }) => State, enabled?: boolean) => Store<State>;
+export declare const combine: <State, States extends Array<any>>(stores: { [Index in keyof States]: Store<States[Index]>; }, callback: (stores: { [K in keyof States]: Store<States[K]>; }) => State, enabled?: boolean) => Store<State>;
 
 export declare type Effect<AsyncAction extends EffectAction> = {
     (...args: Parameters<AsyncAction>): Promise<Awaited<ReturnType<AsyncAction>>>;

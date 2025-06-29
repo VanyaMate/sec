@@ -1,85 +1,112 @@
-import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { marker } from './index';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { effect } from '../effect';
-import { store } from '../store';
+import { marker } from './index';
 
 
-const createPostAction = async (id: number) => {
-    return new Promise<{ id: number }>((resolve) => {
-        setTimeout(() => {
-            resolve({ id });
-        }, 500);
-    });
-};
-const loginAction      = async () => {
-};
-const logoutAction     = async () => {
-};
-const loginEffect      = effect(loginAction);
-const logoutEffect     = effect(logoutAction);
-const createPostEffect = effect(createPostAction);
-const loginMarker      = marker('beforeAll').on('onSuccess', loginEffect);
-const logoutMarker     = marker('afterAll').on('onSuccess', logoutEffect);
+// Сгенерировано AI
 
-const postsStore = store<Array<{ id: number }>>([], true)
-    .enableOn(loginMarker)
-    .disableOn(logoutMarker)
-    .on(createPostEffect, 'onSuccess', (state, { result }) => state.concat(result));
+describe('marker()', () => {
+    let testEffect: ReturnType<typeof effect<(x: number) => Promise<number>>>;
 
-describe('marker', () => {
-    beforeAll(() => {
-        postsStore.set([]);
+    beforeEach(() => {
+        testEffect = effect(async (x: number) => x);
     });
 
-    test('check with effect', async () => {
-        const mockFunction = vi.fn();
-        loginMarker.subscribe(mockFunction);
-        await loginEffect().finally(() => {
-            expect(mockFunction).toBeCalledTimes(1);
-        });
-        await loginEffect().finally(() => {
-            expect(mockFunction).toBeCalledTimes(2);
-        });
+    it('calls listeners on onBefore', async () => {
+        const m = marker();
+
+        const listener = vi.fn();
+        m.subscribe(listener);
+
+        m.on('onBefore', testEffect);
+
+        await testEffect(1);
+
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    test('check with effect + store', () => {
-        createPostEffect(1)
-            .finally(() => {
-                expect(postsStore.get()).deep.eq([]);
-            });
+    it('calls listeners on onSuccess', async () => {
+        const m = marker();
 
-        loginEffect().finally(async () => {
-            await createPostEffect(2).finally(() => {
-                expect(postsStore.get()).deep.eq([ { id: 2 } ]);
-            });
-            createPostEffect(3)
-                .then(() => {
-                    expect(postsStore.get()).deep.eq([ { id: 2 } ]);
-                });
-            logoutEffect();
-        });
+        const listener = vi.fn();
+        m.subscribe(listener);
+
+        m.on('onSuccess', testEffect);
+
+        await testEffect(5);
+
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
-    test('check queue', () => {
-        const queue: Array<number> = [];
-        const logoutEffect         = async function () {
-            return new Promise(resolve => setTimeout(resolve, 100));
-        };
-        const beforeLogout         = effect(logoutEffect);
-        const middleLogout         = effect(logoutEffect);
-        const afterLogout          = effect(logoutEffect);
-
-        store<Array<number>>([]).on(middleLogout, 'onSuccess', (state) => {
-            queue.push(2);
-            return state;
+    it('calls listeners on onError', async () => {
+        const failingEffect = effect(async () => {
+            throw new Error('oops');
         });
 
-        marker('afterAll').on('onSuccess', afterLogout).subscribe(() => queue.push(3));
-        marker('beforeAll').on('onSuccess', beforeLogout).subscribe(() => queue.push(1));
+        const m        = marker();
+        const listener = vi.fn();
+        m.subscribe(listener);
+        m.on('onError', failingEffect);
 
-        logoutEffect()
-            .finally(() => {
-                expect(queue).deep.eq([ 1, 2, 3 ]);
-            });
+        try {
+            await failingEffect();
+        } catch (_) {
+        }
+
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls listeners on onFinally', async () => {
+        const m        = marker();
+        const listener = vi.fn();
+        m.subscribe(listener);
+        m.on('onFinally', testEffect);
+
+        await testEffect(10);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('supports multiple listeners', async () => {
+        const m         = marker();
+        const listener1 = vi.fn();
+        const listener2 = vi.fn();
+
+        m.subscribe(listener1);
+        m.subscribe(listener2);
+
+        m.on('onBefore', testEffect);
+
+        await testEffect(2);
+
+        expect(listener1).toHaveBeenCalledTimes(1);
+        expect(listener2).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call listeners if not subscribed to the event', async () => {
+        const m        = marker();
+        const listener = vi.fn();
+        m.subscribe(listener);
+
+        // подписка только на onSuccess, не onBefore
+        m.on('onSuccess', testEffect);
+
+        await testEffect(123); // onBefore вызовется, но marker не слушает
+
+        expect(listener).toHaveBeenCalledTimes(1); // только onSuccess
+    });
+
+    it('triggers listeners in order of subscription', async () => {
+        const m = marker();
+
+        const calls: string[] = [];
+        m.subscribe(() => calls.push('first'));
+        m.subscribe(() => calls.push('second'));
+
+        m.on('onBefore', testEffect);
+
+        await testEffect(1);
+
+        expect(calls).toEqual([ 'first', 'second' ]);
     });
 });

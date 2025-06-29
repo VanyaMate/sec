@@ -1,4 +1,4 @@
-import { EffectAction, Effect, effect } from '../effect';
+import { EffectAction, Effect } from '../effect';
 import { Marker } from '../marker';
 
 
