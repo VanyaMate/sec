@@ -1,5 +1,7 @@
 # SEC (Store, Effect, Combine)
 
+https://sec-docs-minimal.lovable.app/
+
 Tiny state manager
 
 *It may change in the future*
