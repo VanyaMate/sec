@@ -41,7 +41,7 @@ export declare type MarkerListener = () => void;
 
 export declare const pending: (effects: Array<Effect<any>>) => Store<boolean>;
 
-export declare const result: <State, Action extends EffectAction>() => StoreHandlerMap<State, Action>["onSuccess"];
+export declare const result: <State extends Awaited<ReturnType<Action>>, Action extends EffectAction>() => StoreHandlerMap<State, Action>["onSuccess"];
 
 export declare type Store<State> = {
     on: StoreEffectSubscribe<State>;
