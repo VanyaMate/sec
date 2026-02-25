@@ -73,7 +73,7 @@ describe('store()', () => {
 
     it('respects enabled=false and blocks effect updates', async () => {
         const fx            = effect(async (n: number) => n);
-        const disabledStore = store(0, false);
+        const disabledStore = store(0, { enabled: false });
         disabledStore.on(fx, 'onSuccess', (state, { result }) => result + 1);
         await fx(10);
         expect(disabledStore.get()).toBe(0); // update blocked
@@ -82,7 +82,7 @@ describe('store()', () => {
     it('enableOn() re-enables updates via marker', async () => {
         const m             = marker<number>();
         const fx            = effect(async (n: number) => n);
-        const disabledStore = store(0, false).on(fx, 'onSuccess', (state, { result }) => result);
+        const disabledStore = store(0, { enabled: false }).on(fx, 'onSuccess', (state, { result }) => result);
 
         disabledStore.enableOn(m, 5); // enables + sets to 5
         m.on('onBefore', fx);
@@ -94,7 +94,7 @@ describe('store()', () => {
     it('disableOn() disables updates via marker', async () => {
         const m = marker<number>();
         const e = effect(async (n: number) => n);
-        const s = store(0, true).on(e, 'onSuccess', (state, { result }) => result);
+        const s = store(0, { enabled: true }).on(e, 'onSuccess', (state, { result }) => result);
 
         s.disableOn(m, -100); // disables + sets to -100
         m.on('onBefore', e);
