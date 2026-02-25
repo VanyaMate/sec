@@ -161,8 +161,10 @@ const postsIsPending = pending([
 
 Store stores data and subscribes to effect.
 
-When initializing, the store takes 2 values. The first value is the initialization data. The second value is optional -
-enable/disable. When disabled, the store will not be updated.
+When initializing, the store takes 2 values. The first value is the initialization data. The second value is settings.
+
+- `enabled` - default is `true`. When disabled, the store will not be updated. 
+- `instantListenerExecution` - default is `false`. When enabled, a listener will instant executed when subscribe.
 
 The store has an api.
 
@@ -186,7 +188,7 @@ The store has an api.
 
 ```typescript
 
-const authIsPending = store<boolean>(false)
+const authIsPending = store<boolean>(false, { enabled: true, instantListenerExecution: true })
     .on(loginEffect, 'onBefore', () => true)
     .on(loginEffect, 'onFinally', to(false)); // instead of () => false
 
