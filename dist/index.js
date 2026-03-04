@@ -1,10 +1,10 @@
-let d = 0, A = [];
+let d = 0, A = /* @__PURE__ */ new Map();
 const E = () => d += 1, p = () => {
   d -= 1, B() && C();
-}, B = () => d == 0, y = (o) => {
-  B() ? o() : A.push(o);
+}, B = () => d == 0, y = (o, n) => {
+  B() ? o() : A.set(n, o);
 }, C = () => {
-  A.forEach((o) => o()), A.length = 0;
+  A.forEach((o) => o()), A.clear();
 }, i = function(o, n) {
   o && n();
 }, k = function(o, n = { enabled: !0, instantListenerExecution: !1 }) {
@@ -52,7 +52,7 @@ const E = () => d += 1, p = () => {
     set(r) {
       o = r, y(() => {
         l != o && (l = o, c.forEach((s) => s(o)));
-      });
+      }, this);
     },
     subscribe(r) {
       return c.add(r), f && r(o), () => c.delete(r);

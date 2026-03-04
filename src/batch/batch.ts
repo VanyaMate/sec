@@ -1,5 +1,7 @@
+import { Store } from "../store";
+
 export let batches: number = 0;
-export let batchedFns: Array<() => void> = [];
+export let batchedFnsMap: Map<Store<any>, () => void> = new Map();
 
 export const startBatch = () => batches += 1;
 export const endBatch = () => {
@@ -8,13 +10,13 @@ export const endBatch = () => {
         executeBatchedFns();
 }
 export const isLastBatchItem = () => batches == 0;
-export const batched = (fn: () => void) => {
+export const batched = (fn: () => void, store: Store<any>) => {
     if (isLastBatchItem())
         fn();
     else
-        batchedFns.push(fn);
+        batchedFnsMap.set(store, fn);
 }
 export const executeBatchedFns = () => {
-    batchedFns.forEach((fn) => fn());
-    batchedFns.length = 0;
+    batchedFnsMap.forEach((fn) => fn());
+    batchedFnsMap.clear();
 };

@@ -60,7 +60,7 @@ export const enableCheck = function (enabled: boolean, callback: () => void) {
 
 export const store = function <State extends any> (state: State, options: StoreOptions = { enabled: true, instantListenerExecution: false }): Store<State> {
     const listeners: Set<StoreListener<State>> = new Set();
-    let previousState: any = undefined;
+    let previousState: unknown = undefined;
     let { enabled = true, instantListenerExecution = false } = options;
 
 
@@ -123,7 +123,7 @@ export const store = function <State extends any> (state: State, options: StoreO
                     previousState = state;
                     listeners.forEach((listener) => listener(state));
                 }
-            });
+            }, this);
         },
         subscribe (listener: StoreListener<State>) {
             listeners.add(listener);
