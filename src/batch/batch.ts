@@ -10,11 +10,10 @@ export const endBatch = () => {
         executeBatchedFns();
 }
 export const isLastBatchItem = () => batches == 0;
-export const batched = (fn: () => void, store: Store<any>) => {
-    if (isLastBatchItem())
-        fn();
-    else
-        batchedFnsMap.set(store, fn);
+export const batch = (store: Store<any>, fn: () => void) => {
+    startBatch();
+    batchedFnsMap.set(store, fn);
+    queueMicrotask(endBatch);
 }
 export const executeBatchedFns = () => {
     batchedFnsMap.forEach((fn) => fn());

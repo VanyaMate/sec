@@ -3,6 +3,7 @@ import {
     Store, StoreListener,
 } from '../store';
 import { Marker } from '../marker';
+import { batch } from '../batch/batch';
 
 
 export const combine = function <State, States extends Array<any>> (
@@ -10,17 +11,16 @@ export const combine = function <State, States extends Array<any>> (
     callback: (stores: { [K in keyof States]: Store<States[K]> }) => State,
     enabled: boolean = true,
 ): Store<State> {
-    console.log('Combine', stores, callback, enabled);
-
-
     let combinedState: State                     = callback(stores);
-    const listeners: Array<StoreListener<State>> = [];
+    const listeners: Set<StoreListener<State>> = new Set();
 
     stores.forEach((store) => {
         store.subscribe(() => {
             enableCheck(enabled, () => {
-                combinedState = callback(stores);
-                listeners.forEach((listener) => listener(combinedState));
+                batch(storeApi, () => {
+                    combinedState = callback(stores);
+                    listeners.forEach((listener) => listener(combinedState));
+                });
             });
         });
     });
@@ -36,13 +36,9 @@ export const combine = function <State, States extends Array<any>> (
             throw new Error(`Cannot call 'set' on combined store`);
         },
         subscribe (listener: StoreListener<State>) {
-            listeners.push(listener);
-            return () => {
-                const index = listeners.indexOf(listener);
-                if (~index) {
-                    listeners.splice(index, 1);
-                }
-            };
+            listeners.add(listener);
+            listener(combinedState);
+            return () => listeners.delete(listener);
         },
         enableOn (marker: Marker<State>) {
             marker.subscribe(() => enabled = true);

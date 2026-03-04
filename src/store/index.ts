@@ -1,4 +1,4 @@
-import { batched, endBatch, isLastBatchItem, startBatch } from '../batch/batch';
+import { batch, endBatch, isLastBatchItem, startBatch } from '../batch/batch';
 import { EffectAction, Effect } from '../effect';
 import { Marker } from '../marker';
 
@@ -60,9 +60,8 @@ export const enableCheck = function (enabled: boolean, callback: () => void) {
 
 export const store = function <State extends any> (state: State, options: StoreOptions = { enabled: true, instantListenerExecution: false }): Store<State> {
     const listeners: Set<StoreListener<State>> = new Set();
-    let previousState: unknown = undefined;
+    let previousState: State = state;
     let { enabled = true, instantListenerExecution = false } = options;
-
 
     const storeApi: Store<State> = {
         on: <
@@ -118,12 +117,12 @@ export const store = function <State extends any> (state: State, options: StoreO
         },
         set (value: State) {
             state = value;
-            batched(() => {
+            batch(this, () => {
                 if (previousState != state) {
                     previousState = state;
                     listeners.forEach((listener) => listener(state));
                 }
-            }, this);
+            });
         },
         subscribe (listener: StoreListener<State>) {
             listeners.add(listener);
@@ -134,11 +133,7 @@ export const store = function <State extends any> (state: State, options: StoreO
             marker.subscribe(() => {
                 enabled = true;
                 if (state !== undefined) {
-                    startBatch();
-                    queueMicrotask(() => {
-                        endBatch();
-                        storeApi.set(state);
-                    });
+                    storeApi.set(state);
                 }
             });
             return storeApi;
@@ -147,11 +142,7 @@ export const store = function <State extends any> (state: State, options: StoreO
             marker.subscribe(() => {
                 enabled = false;
                 if (state !== undefined) {
-                    startBatch();
-                    queueMicrotask(() => {
-                        endBatch();
-                        storeApi.set(state);
-                    });
+                    storeApi.set(state);
                 }
             });
             return storeApi;

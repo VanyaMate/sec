@@ -3,6 +3,7 @@ import { Store, store } from '../store';
 import { combine } from './index';
 import { marker } from '../marker';
 import { effect } from '../effect';
+import { delay } from '../_dev_/delay';
 
 // Частично сгенерировано AI
 
@@ -20,22 +21,26 @@ describe('combine()', () => {
         expect(combined.get()).toBe('1-a');
     });
 
-    it('recomputes when source store changes', () => {
+    it('recomputes when source store changes', async () => {
         const combined = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`);
         s1.set(2);
-        expect(combined.get()).toBe('2-a');
+        expect(combined.get()).toBe('1-a');
         s2.set('b');
+        expect(combined.get()).toBe('1-a');
+        await delay(0);
         expect(combined.get()).toBe('2-b');
     });
 
-    it('notifies listeners on change', () => {
+    it('notifies listeners on change', async () => {
         const combined = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`);
         const spy      = vi.fn();
         combined.subscribe(spy);
         s1.set(5);
         s2.set('z');
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith('1-a');
+        await delay(10);
         expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy).toHaveBeenCalledWith('5-a');
         expect(spy).toHaveBeenCalledWith('5-z');
     });
 
@@ -54,15 +59,15 @@ describe('combine()', () => {
         const spy      = vi.fn();
         combined.subscribe(spy);
         s1.set(999);
-        expect(spy).not.toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(combined.get()).toBe('1-a'); // unchanged
     });
 
     it('can enable and disable via markers', async () => {
         const enableMarker  = marker();
         const disableMarker = marker();
-        const enableEffect  = effect(async () => 0);
-        const disableEffect = effect(async () => 0);
+        const enableEffect  = effect(async () => new Promise((resolve) => setTimeout(resolve, 50)));
+        const disableEffect = effect(async () => new Promise((resolve) => setTimeout(resolve, 100)));
         const combined      = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, true);
 
         enableMarker.on('onBefore', enableEffect);

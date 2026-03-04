@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { store } from './index';
 import { effect } from '../effect';
 import { marker } from '../marker';
+import { delay } from '../_dev_/delay';
 
 // Сгенерировано AI
 
@@ -21,20 +22,22 @@ describe('store()', () => {
         expect(count.get()).toBe(10);
     });
 
-    it('notifies subscribers on set()', () => {
+    it('notifies subscribers on set()', async () => {
         const spy = vi.fn();
         count.subscribe(spy);
         count.set(5);
+        await delay(5);
         expect(spy).toHaveBeenCalledWith(5);
     });
 
-    it('unsubscribes correctly', () => {
+    it('unsubscribes correctly', async () => {
         const spy   = vi.fn();
         const unsub = count.subscribe(spy);
         count.set(1);
         unsub();
         count.set(2);
-        expect(spy).toHaveBeenCalledTimes(1);
+        await delay(10);
+        expect(spy).toHaveBeenCalledTimes(0);
     });
 
     it('updates via onBefore from effect', async () => {

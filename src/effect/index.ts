@@ -40,33 +40,27 @@ export const effect = function <Action extends EffectAction> (action: Action): E
     const finallyCallbacks: EffectCallbackList<EffectFinallyCallback<Action>> = getCallbacksList<EffectFinallyCallback<Action>>();
 
     const effectApi: Effect<Action> = async function (...args) {
-        startBatch();
-        try {
-            beforeCallbacks.beforeAll.forEach((callback) => callback(...args));
-            beforeCallbacks.other.forEach((callback) => callback(...args));
-            beforeCallbacks.afterAll.forEach((callback) => callback(...args));
-
-            return await action(...args)
-                .then((result: Awaited<ReturnType<Action>>) => {
-                    successCallbacks.beforeAll.forEach((callback) => callback(result, ...args));
-                    successCallbacks.other.forEach((callback) => callback(result, ...args));
-                    successCallbacks.afterAll.forEach((callback) => callback(result, ...args));
-                    return result;
-                })
-                .catch((error: unknown) => {
-                    errorCallbacks.beforeAll.forEach((callback) => callback(error, ...args));
-                    errorCallbacks.other.forEach((callback) => callback(error, ...args));
-                    errorCallbacks.afterAll.forEach((callback) => callback(error, ...args));
-                    throw error;
-                })
-                .finally(() => {
-                    finallyCallbacks.beforeAll.forEach((callback) => callback(...args));
-                    finallyCallbacks.other.forEach((callback) => callback(...args));
-                    finallyCallbacks.afterAll.forEach((callback) => callback(...args));
-                });
-        } finally {
-            endBatch();
-        }
+        beforeCallbacks.beforeAll.forEach((callback) => callback(...args));
+        beforeCallbacks.other.forEach((callback) => callback(...args));
+        beforeCallbacks.afterAll.forEach((callback) => callback(...args));
+        return action(...args)
+            .then((result: Awaited<ReturnType<Action>>) => {
+                successCallbacks.beforeAll.forEach((callback) => callback(result, ...args));
+                successCallbacks.other.forEach((callback) => callback(result, ...args));
+                successCallbacks.afterAll.forEach((callback) => callback(result, ...args));
+                return result;
+            })
+            .catch((error: unknown) => {
+                errorCallbacks.beforeAll.forEach((callback) => callback(error, ...args));
+                errorCallbacks.other.forEach((callback) => callback(error, ...args));
+                errorCallbacks.afterAll.forEach((callback) => callback(error, ...args));
+                throw error;
+            })
+            .finally(() => {
+                finallyCallbacks.beforeAll.forEach((callback) => callback(...args));
+                finallyCallbacks.other.forEach((callback) => callback(...args));
+                finallyCallbacks.afterAll.forEach((callback) => callback(...args));
+            });
     } as Effect<Action>;
 
     effectApi.onBefore  = (callback: EffectBeforeCallback<Action>, position?: EffectSubscribePosition) => {

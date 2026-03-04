@@ -30,7 +30,7 @@ describe('pending()', () => {
         await promise;
         expect(state.get()).toBe(false); // reset by onFinally
 
-        expect(updates).toEqual([ false ]);
+        expect(updates).toEqual([ true, false ]);
     });
 
     it('sets true on onBefore and false on onFinally (error case)', async () => {
@@ -48,7 +48,7 @@ describe('pending()', () => {
         } catch (_) {
         }
 
-        expect(updates).toEqual([ false  ]);
+        expect(updates).toEqual([ true, false ]);
         expect(state.get()).toBe(false);
     });
 
@@ -63,9 +63,9 @@ describe('pending()', () => {
         state.subscribe((v) => changes.push(v));
 
         await fx1();
-        expect(changes).toEqual([ false ]);
+        expect(changes).toEqual([ true, false ]);
 
         await fx2();
-        expect(changes).toEqual([ false ]);
+        expect(changes).toEqual([ true, false, true, false ]);
     });
 });
