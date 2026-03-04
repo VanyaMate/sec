@@ -9,7 +9,7 @@ export const endBatch = () => {
     if (isLastBatchItem())
         executeBatchedFns();
 }
-export const isLastBatchItem = () => batches == 0;
+export const isLastBatchItem = () => batches === 0;
 export const batch = (store: Store<any>, fn: () => void) => {
     startBatch();
     batchedFnsMap.set(store, fn);

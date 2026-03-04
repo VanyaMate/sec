@@ -37,10 +37,9 @@ describe('combine()', () => {
         combined.subscribe(spy);
         s1.set(5);
         s2.set('z');
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith('1-a');
+        expect(spy).toHaveBeenCalledTimes(0);
         await delay(10);
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith('5-z');
     });
 
@@ -51,16 +50,29 @@ describe('combine()', () => {
         s1.set(10);
         unsubscribe();
         s1.set(11);
+        expect(spy).toHaveBeenCalledTimes(0);
+    });
+
+    
+    it('can unsubscribe from changes (with instant)', () => {
+        const combined    = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, { instantListenerExecution: true });
+        const spy         = vi.fn();
+        const unsubscribe = combined.subscribe(spy);
+        s1.set(10);
+        unsubscribe();
+        s1.set(11);
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('respects "enabled" flag (false)', () => {
-        const combined = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, false);
+    it('respects "enabled" flag (false)', async () => {
+        const combined = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, { enabled: false });
         const spy      = vi.fn();
         combined.subscribe(spy);
         s1.set(999);
-        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledTimes(0);
         expect(combined.get()).toBe('1-a'); // unchanged
+        await delay(100);
+        expect(spy).toHaveBeenCalledTimes(0);
     });
 
     it('can enable and disable via markers', async () => {
@@ -68,7 +80,7 @@ describe('combine()', () => {
         const disableMarker = marker();
         const enableEffect  = effect(async () => new Promise((resolve) => setTimeout(resolve, 50)));
         const disableEffect = effect(async () => new Promise((resolve) => setTimeout(resolve, 100)));
-        const combined      = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, true);
+        const combined      = combine([ s1, s2 ], ([ _s1, _s2 ]) => `${ _s1.get() }-${ _s2.get() }`, { enabled: true, instantListenerExecution: false });
 
         enableMarker.on('onBefore', enableEffect);
         disableMarker.on('onBefore', disableEffect);
@@ -81,13 +93,13 @@ describe('combine()', () => {
 
         await enableEffect();
         s1.set(123);
-        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledTimes(0);
         await disableEffect();
         s1.set(321);
-        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledTimes(0);
         await enableEffect();
         s1.set(123);
-        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it('throws on .on or .set', () => {

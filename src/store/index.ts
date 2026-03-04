@@ -118,7 +118,7 @@ export const store = function <State extends any> (state: State, options: StoreO
         set (value: State) {
             state = value;
             batch(this, () => {
-                if (previousState != state) {
+                if (previousState !== state) {
                     previousState = state;
                     listeners.forEach((listener) => listener(state));
                 }
