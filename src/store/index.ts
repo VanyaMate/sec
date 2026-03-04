@@ -1,3 +1,4 @@
+import { batched, endBatch, isLastBatchItem, startBatch } from '../batch/batch';
 import { EffectAction, Effect } from '../effect';
 import { Marker } from '../marker';
 
@@ -59,6 +60,7 @@ export const enableCheck = function (enabled: boolean, callback: () => void) {
 
 export const store = function <State extends any> (state: State, options: StoreOptions = { enabled: true, instantListenerExecution: false }): Store<State> {
     const listeners: Set<StoreListener<State>> = new Set();
+    let previousState: any = undefined;
     let { enabled = true, instantListenerExecution = false } = options;
 
 
@@ -116,7 +118,12 @@ export const store = function <State extends any> (state: State, options: StoreO
         },
         set (value: State) {
             state = value;
-            listeners.forEach((listener) => listener(state));
+            batched(() => {
+                if (previousState != state) {
+                    previousState = state;
+                    listeners.forEach((listener) => listener(state));
+                }
+            });
         },
         subscribe (listener: StoreListener<State>) {
             listeners.add(listener);
@@ -124,17 +131,29 @@ export const store = function <State extends any> (state: State, options: StoreO
             return () => listeners.delete(listener);
         },
         enableOn (marker: Marker<State>, state?: State) {
-            marker.subscribe(() => enabled = true);
-            if (state !== undefined) {
-                storeApi.set(state);
-            }
+            marker.subscribe(() => {
+                enabled = true;
+                if (state !== undefined) {
+                    startBatch();
+                    queueMicrotask(() => {
+                        endBatch();
+                        storeApi.set(state);
+                    });
+                }
+            });
             return storeApi;
         },
         disableOn (marker: Marker<State>, state?: State) {
-            marker.subscribe(() => enabled = false);
-            if (state !== undefined) {
-                storeApi.set(state);
-            }
+            marker.subscribe(() => {
+                enabled = false;
+                if (state !== undefined) {
+                    startBatch();
+                    queueMicrotask(() => {
+                        endBatch();
+                        storeApi.set(state);
+                    });
+                }
+            });
             return storeApi;
         },
     };
