@@ -8,7 +8,7 @@ export declare type Effect<AsyncAction extends EffectAction> = {
     onFinally: (callback: EffectFinallyCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
 };
 
-export declare const effect: <Action extends EffectAction>(action: Action) => Effect<Action>;
+export declare const effect: <Action extends EffectAction>(action?: Action) => Effect<Action>;
 
 export declare type EffectAction = (...args: Array<any>) => Promise<any>;
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { effect } from './index';
+import { delay } from '../_dev_/delay';
 
 
 // Сгенерировано AI
@@ -106,4 +107,20 @@ describe('effect()', () => {
 
         expect(spy).toHaveBeenCalledTimes(2);
     });
+
+    it('without effect', async () => {
+        const spy = vi.fn();
+        let isSuccess = false;
+
+        const emptyEffect = effect();
+        emptyEffect.onSuccess((data) => {
+            isSuccess = data;
+            spy();
+        });
+
+        emptyEffect(true);
+        await delay(0);
+        expect(isSuccess).toEqual(true);
+        expect(spy).toHaveBeenCalledTimes(1);
+    })
 });

@@ -1,5 +1,3 @@
-import { endBatch, startBatch } from "../batch/batch";
-
 export type EffectAction = (...args: Array<any>) => Promise<any>;
 export type EffectSuccessCallback<AsyncAction extends EffectAction> = (result: Awaited<ReturnType<AsyncAction>>, ...args: Parameters<AsyncAction>) => void;
 export type EffectErrorCallback<AsyncAction extends EffectAction> = (error: unknown, ...args: Parameters<AsyncAction>) => void;
@@ -33,17 +31,18 @@ const getCallbacksList = function <Type> (): EffectCallbackList<Type> {
     };
 };
 
-export const effect = function <Action extends EffectAction> (action: Action): Effect<Action> {
+export const effect = function <Action extends EffectAction> (action?: Action): Effect<Action> {
     const beforeCallbacks: EffectCallbackList<EffectBeforeCallback<Action>>   = getCallbacksList<EffectBeforeCallback<Action>>();
     const successCallbacks: EffectCallbackList<EffectSuccessCallback<Action>> = getCallbacksList<EffectSuccessCallback<Action>>();
     const errorCallbacks: EffectCallbackList<EffectErrorCallback<Action>>     = getCallbacksList<EffectErrorCallback<Action>>();
     const finallyCallbacks: EffectCallbackList<EffectFinallyCallback<Action>> = getCallbacksList<EffectFinallyCallback<Action>>();
+    const safeAction: EffectAction = action ?? (async (state) => state);
 
     const effectApi: Effect<Action> = async function (...args) {
         beforeCallbacks.beforeAll.forEach((callback) => callback(...args));
         beforeCallbacks.other.forEach((callback) => callback(...args));
         beforeCallbacks.afterAll.forEach((callback) => callback(...args));
-        return action(...args)
+        return safeAction(...args)
             .then((result: Awaited<ReturnType<Action>>) => {
                 successCallbacks.beforeAll.forEach((callback) => callback(result, ...args));
                 successCallbacks.other.forEach((callback) => callback(result, ...args));
