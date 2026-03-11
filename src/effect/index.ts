@@ -23,6 +23,8 @@ export type EffectCallbackList<Type> = {
     other: Array<Type>;
 }
 
+export type EmptyEffect<State> = (state: State) => Promise<State>;
+
 const getCallbacksList = function <Type> (): EffectCallbackList<Type> {
     return {
         afterAll : [],

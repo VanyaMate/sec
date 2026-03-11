@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { effect } from './index';
+import { effect, EmptyEffect } from './index';
 import { delay } from '../_dev_/delay';
 
 
@@ -112,7 +112,7 @@ describe('effect()', () => {
         const spy = vi.fn();
         let isSuccess = false;
 
-        const emptyEffect = effect();
+        const emptyEffect = effect<EmptyEffect<boolean>>();
         emptyEffect.onSuccess((data) => {
             isSuccess = data;
             spy();

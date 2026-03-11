@@ -28,6 +28,8 @@ export declare type EffectSubscribePosition = 'beforeAll' | 'afterAll' | undefin
 
 export declare type EffectSuccessCallback<AsyncAction extends EffectAction> = (result: Awaited<ReturnType<AsyncAction>>, ...args: Parameters<AsyncAction>) => void;
 
+export declare type EmptyEffect<State> = (state: State) => Promise<State>;
+
 export declare const enableCheck: (enabled: boolean, callback: () => void) => void;
 
 export declare type Marker<State> = {
