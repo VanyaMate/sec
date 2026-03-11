@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { effect, EmptyEffect } from './index';
-import { delay } from '../_dev_/delay';
+import { effect } from './index';
 
 
 // Сгенерировано AI
