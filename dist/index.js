@@ -1,38 +1,38 @@
 let A = 0, E = /* @__PURE__ */ new Map();
 const w = () => A += 1, B = () => {
   A -= 1, S() && k();
-}, S = () => A === 0, p = (n, o) => {
-  w(), E.set(n, o), queueMicrotask(B);
+}, S = () => A === 0, p = (o, t) => {
+  w(), E.set(o, t), queueMicrotask(B);
 }, k = () => {
-  E.forEach((n) => n()), E.clear();
-}, i = function(n, o) {
-  n && o();
-}, y = function(n, o = { enabled: !0, instantListenerExecution: !1 }) {
+  E.forEach((o) => o()), E.clear();
+}, i = function(o, t) {
+  o && t();
+}, C = function(o, t = { enabled: !0, instantListenerExecution: !1 }) {
   const f = /* @__PURE__ */ new Set();
-  let s = n, { enabled: c = !0, instantListenerExecution: u = !1 } = o;
-  const l = {
-    on: (e, r, t) => (r === "onBefore" ? e.onBefore(
+  let s = o, { enabled: c = !0, instantListenerExecution: l = !1 } = t;
+  const r = {
+    on: (e, n, u) => (n === "onBefore" ? e.onBefore(
       (...a) => i(
         c,
-        () => l.set(
-          t(n, { args: a })
+        () => r.set(
+          u(o, { args: a })
         )
       )
-    ) : r === "onSuccess" ? e.onSuccess(
+    ) : n === "onSuccess" ? e.onSuccess(
       (a, ...b) => i(
         c,
-        () => l.set(
-          t(n, {
+        () => r.set(
+          u(o, {
             result: a,
             args: b
           })
         )
       )
-    ) : r === "onError" ? e.onError(
+    ) : n === "onError" ? e.onError(
       (a, ...b) => i(
         c,
-        () => l.set(
-          t(n, {
+        () => r.set(
+          u(o, {
             error: a,
             args: b
           })
@@ -41,108 +41,108 @@ const w = () => A += 1, B = () => {
     ) : e.onFinally(
       (...a) => i(
         c,
-        () => l.set(
-          t(n, { args: a })
+        () => r.set(
+          u(o, { args: a })
         )
       )
-    ), l),
+    ), r),
     get() {
-      return n;
+      return o;
     },
     set(e) {
-      n = e, p(this, () => {
-        s !== n && (s = n, f.forEach((r) => r(n)));
+      o = e, p(this, () => {
+        s !== o && (s = o, f.forEach((n) => n(o)));
       });
     },
     subscribe(e) {
-      return f.add(e), u && e(n), () => f.delete(e);
+      return f.add(e), l && e(o), () => f.delete(e);
     },
-    enableOn(e, r) {
+    enableOn(e, n) {
       return e.subscribe(() => {
-        c = !0, r !== void 0 && l.set(r);
-      }), l;
+        c = !0, n !== void 0 && r.set(n);
+      }), r;
     },
-    disableOn(e, r) {
+    disableOn(e, n) {
       return e.subscribe(() => {
-        c = !1, r !== void 0 && l.set(r);
-      }), l;
+        c = !1, n !== void 0 && r.set(n);
+      }), r;
     }
   };
-  return l;
+  return r;
 }, h = function() {
   return {
     afterAll: [],
     beforeAll: [],
     other: []
   };
-}, C = function(n) {
-  const o = h(), f = h(), s = h(), c = h(), u = n ?? (async (e) => e), l = async function(...e) {
-    return o.beforeAll.forEach((r) => r(...e)), o.other.forEach((r) => r(...e)), o.afterAll.forEach((r) => r(...e)), u(...e).then((r) => (f.beforeAll.forEach((t) => t(r, ...e)), f.other.forEach((t) => t(r, ...e)), f.afterAll.forEach((t) => t(r, ...e)), r)).catch((r) => {
-      throw s.beforeAll.forEach((t) => t(r, ...e)), s.other.forEach((t) => t(r, ...e)), s.afterAll.forEach((t) => t(r, ...e)), r;
+}, m = function(o) {
+  const t = h(), f = h(), s = h(), c = h(), l = async function(...r) {
+    return t.beforeAll.forEach((e) => e(...r)), t.other.forEach((e) => e(...r)), t.afterAll.forEach((e) => e(...r)), o(...r).then((e) => (f.beforeAll.forEach((n) => n(e, ...r)), f.other.forEach((n) => n(e, ...r)), f.afterAll.forEach((n) => n(e, ...r)), e)).catch((e) => {
+      throw s.beforeAll.forEach((n) => n(e, ...r)), s.other.forEach((n) => n(e, ...r)), s.afterAll.forEach((n) => n(e, ...r)), e;
     }).finally(() => {
-      c.beforeAll.forEach((r) => r(...e)), c.other.forEach((r) => r(...e)), c.afterAll.forEach((r) => r(...e));
+      c.beforeAll.forEach((e) => e(...r)), c.other.forEach((e) => e(...r)), c.afterAll.forEach((e) => e(...r));
     });
   };
-  return l.onBefore = (e, r) => {
-    switch (r) {
+  return l.onBefore = (r, e) => {
+    switch (e) {
       case "beforeAll":
-        o.beforeAll.push(e);
+        t.beforeAll.push(r);
         break;
       case "afterAll":
-        o.afterAll.push(e);
+        t.afterAll.push(r);
         break;
       default:
-        o.other.push(e);
+        t.other.push(r);
     }
-  }, l.onSuccess = (e, r) => {
-    switch (r) {
+  }, l.onSuccess = (r, e) => {
+    switch (e) {
       case "beforeAll":
-        f.beforeAll.push(e);
+        f.beforeAll.push(r);
         break;
       case "afterAll":
-        f.afterAll.push(e);
+        f.afterAll.push(r);
         break;
       default:
-        f.other.push(e);
+        f.other.push(r);
     }
-  }, l.onError = (e, r) => {
-    switch (r) {
+  }, l.onError = (r, e) => {
+    switch (e) {
       case "beforeAll":
-        s.beforeAll.push(e);
+        s.beforeAll.push(r);
         break;
       case "afterAll":
-        s.afterAll.push(e);
+        s.afterAll.push(r);
         break;
       default:
-        s.other.push(e);
+        s.other.push(r);
     }
-  }, l.onFinally = (e, r) => {
-    switch (r) {
+  }, l.onFinally = (r, e) => {
+    switch (e) {
       case "beforeAll":
-        c.beforeAll.push(e);
+        c.beforeAll.push(r);
         break;
       case "afterAll":
-        c.afterAll.push(e);
+        c.afterAll.push(r);
         break;
       default:
-        c.other.push(e);
+        c.other.push(r);
     }
   }, l;
-}, m = function(n, o, f = { enabled: !0, instantListenerExecution: !1 }) {
+}, y = function(o, t, f = { enabled: !0, instantListenerExecution: !1 }) {
   let s, c;
-  s = c = o(n);
-  const u = /* @__PURE__ */ new Set();
-  let { enabled: l = !0, instantListenerExecution: e = !1 } = f;
-  n.forEach((t) => {
-    t.subscribe(() => {
-      i(l, () => {
-        p(r, () => {
-          s = o(n), s !== c && (c = s, u.forEach((a) => a(s)));
+  s = c = t(o);
+  const l = /* @__PURE__ */ new Set();
+  let { enabled: r = !0, instantListenerExecution: e = !1 } = f;
+  o.forEach((u) => {
+    u.subscribe(() => {
+      i(r, () => {
+        p(n, () => {
+          s = t(o), s !== c && (c = s, l.forEach((a) => a(s)));
         });
       });
     });
   });
-  const r = {
+  const n = {
     on: () => {
       throw new Error("Cannot call 'on' on combined store");
     },
@@ -152,42 +152,42 @@ const w = () => A += 1, B = () => {
     set() {
       throw new Error("Cannot call 'set' on combined store");
     },
-    subscribe(t) {
-      return u.add(t), e && t(s), () => u.delete(t);
+    subscribe(u) {
+      return l.add(u), e && u(s), () => l.delete(u);
     },
-    enableOn(t) {
-      return t.subscribe(() => l = !0), r;
+    enableOn(u) {
+      return u.subscribe(() => r = !0), n;
     },
-    disableOn(t) {
-      return t.subscribe(() => l = !1), r;
+    disableOn(u) {
+      return u.subscribe(() => r = !1), n;
     }
   };
-  return r;
-}, x = function(n) {
-  const o = [], f = {
-    on: (s, c) => (s === "onBefore" ? c.onBefore(() => o.forEach((u) => u()), n) : s === "onSuccess" ? c.onSuccess(() => o.forEach((u) => u()), n) : s === "onError" ? c.onError(() => o.forEach((u) => u()), n) : c.onFinally(() => o.forEach((u) => u()), n), f),
+  return n;
+}, x = function(o) {
+  const t = [], f = {
+    on: (s, c) => (s === "onBefore" ? c.onBefore(() => t.forEach((l) => l()), o) : s === "onSuccess" ? c.onSuccess(() => t.forEach((l) => l()), o) : s === "onError" ? c.onError(() => t.forEach((l) => l()), o) : c.onFinally(() => t.forEach((l) => l()), o), f),
     subscribe: (s) => {
-      o.push(s);
+      t.push(s);
     }
   };
   return f;
-}, d = function(n) {
-  return () => n;
-}, F = function(n) {
-  const o = y(!1);
-  return n.forEach((f) => {
-    o.on(f, "onBefore", d(!0)), o.on(f, "onFinally", d(!1));
-  }), o;
+}, d = function(o) {
+  return () => o;
+}, F = function(o) {
+  const t = C(!1);
+  return o.forEach((f) => {
+    t.on(f, "onBefore", d(!0)), t.on(f, "onFinally", d(!1));
+  }), t;
 }, L = function() {
-  return (n, { result: o }) => o;
+  return (o, { result: t }) => t;
 };
 export {
-  m as combine,
-  C as effect,
+  y as combine,
+  m as effect,
   i as enableCheck,
   x as marker,
   F as pending,
   L as result,
-  y as store,
+  C as store,
   d as to
 };

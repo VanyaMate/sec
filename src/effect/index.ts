@@ -23,8 +23,6 @@ export type EffectCallbackList<Type> = {
     other: Array<Type>;
 }
 
-export type EmptyEffect<State> = (state: State) => Promise<State>;
-
 const getCallbacksList = function <Type> (): EffectCallbackList<Type> {
     return {
         afterAll : [],
@@ -33,18 +31,17 @@ const getCallbacksList = function <Type> (): EffectCallbackList<Type> {
     };
 };
 
-export const effect = function <Action extends EffectAction> (action?: Action): Effect<Action> {
+export const effect = function <Action extends EffectAction> (action: Action): Effect<Action> {
     const beforeCallbacks: EffectCallbackList<EffectBeforeCallback<Action>>   = getCallbacksList<EffectBeforeCallback<Action>>();
     const successCallbacks: EffectCallbackList<EffectSuccessCallback<Action>> = getCallbacksList<EffectSuccessCallback<Action>>();
     const errorCallbacks: EffectCallbackList<EffectErrorCallback<Action>>     = getCallbacksList<EffectErrorCallback<Action>>();
     const finallyCallbacks: EffectCallbackList<EffectFinallyCallback<Action>> = getCallbacksList<EffectFinallyCallback<Action>>();
-    const safeAction: EffectAction = action ?? (async (state) => state);
 
     const effectApi: Effect<Action> = async function (...args) {
         beforeCallbacks.beforeAll.forEach((callback) => callback(...args));
         beforeCallbacks.other.forEach((callback) => callback(...args));
         beforeCallbacks.afterAll.forEach((callback) => callback(...args));
-        return safeAction(...args)
+        return action(...args)
             .then((result: Awaited<ReturnType<Action>>) => {
                 successCallbacks.beforeAll.forEach((callback) => callback(result, ...args));
                 successCallbacks.other.forEach((callback) => callback(result, ...args));

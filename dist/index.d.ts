@@ -8,7 +8,7 @@ export declare type Effect<AsyncAction extends EffectAction> = {
     onFinally: (callback: EffectFinallyCallback<AsyncAction>, position?: EffectSubscribePosition) => void;
 };
 
-export declare const effect: <Action extends EffectAction>(action?: Action) => Effect<Action>;
+export declare const effect: <Action extends EffectAction>(action: Action) => Effect<Action>;
 
 export declare type EffectAction = (...args: Array<any>) => Promise<any>;
 
@@ -27,8 +27,6 @@ export declare type EffectFinallyCallback<AsyncAction extends EffectAction> = (.
 export declare type EffectSubscribePosition = 'beforeAll' | 'afterAll' | undefined;
 
 export declare type EffectSuccessCallback<AsyncAction extends EffectAction> = (result: Awaited<ReturnType<AsyncAction>>, ...args: Parameters<AsyncAction>) => void;
-
-export declare type EmptyEffect<State> = (state: State) => Promise<State>;
 
 export declare const enableCheck: (enabled: boolean, callback: () => void) => void;
 
