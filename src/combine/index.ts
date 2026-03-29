@@ -10,12 +10,12 @@ import { batch } from '../batch/batch';
 export const combine = function <State, States extends Array<any>> (
     stores: { [Index in keyof States]: Store<States[Index]> },
     callback: (stores: { [K in keyof States]: Store<States[K]> }) => State,
-    options: StoreOptions = { enabled: true, instantListenerExecution: false },
+    options: StoreOptions = { enabled: true, instantListenerExecution: true },
 ): Store<State> {
     let combinedState: State, previousState: State;
     combinedState = previousState = callback(stores);
     const listeners: Set<StoreListener<State>>      = new Set();
-    let { enabled = true, instantListenerExecution  = false } = options;
+    let { enabled = true, instantListenerExecution  = true } = options;
 
     stores.forEach((store) => {
         store.subscribe(() => {
@@ -28,7 +28,7 @@ export const combine = function <State, States extends Array<any>> (
                     }
                 });
             });
-        });
+        }, false);
     });
 
     const storeApi: Store<State> = {
@@ -41,9 +41,9 @@ export const combine = function <State, States extends Array<any>> (
         set () {
             throw new Error(`Cannot call 'set' on combined store`);
         },
-        subscribe (listener: StoreListener<State>) {
+        subscribe (listener: StoreListener<State>, instantExecute: boolean = true) {
             listeners.add(listener);
-            if (instantListenerExecution) listener(combinedState);
+            if (instantExecute && instantListenerExecution) listener(combinedState);
             return () => listeners.delete(listener);
         },
         enableOn (marker: Marker<State>) {

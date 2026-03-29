@@ -49,7 +49,7 @@ export declare type Store<State> = {
     disableOn: StoreMarkerSubscribe<State>;
     get: () => State;
     set: (data: State) => void;
-    subscribe: (listener: StoreListener<State>) => () => void;
+    subscribe: (listener: StoreListener<State>, instantExecute?: boolean) => () => void;
 };
 
 export declare const store: <State extends any>(state: State, options?: StoreOptions) => Store<State>;

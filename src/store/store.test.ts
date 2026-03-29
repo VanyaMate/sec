@@ -37,7 +37,7 @@ describe('store()', () => {
         unsub();
         count.set(2);
         await delay(10);
-        expect(spy).toHaveBeenCalledTimes(0);
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it('updates via onBefore from effect', async () => {

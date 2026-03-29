@@ -44,7 +44,7 @@ export type Store<State> = {
     disableOn: StoreMarkerSubscribe<State>;
     get: () => State;
     set: (data: State) => void;
-    subscribe: (listener: StoreListener<State>) => () => void;
+    subscribe: (listener: StoreListener<State>, instantExecute?: boolean) => () => void;
 }
 
 export type StoreOptions = {
@@ -58,10 +58,10 @@ export const enableCheck = function (enabled: boolean, callback: () => void) {
     }
 };
 
-export const store = function <State extends any> (state: State, options: StoreOptions = { enabled: true, instantListenerExecution: false }): Store<State> {
+export const store = function <State extends any> (state: State, options: StoreOptions = { enabled: true, instantListenerExecution: true }): Store<State> {
     const listeners: Set<StoreListener<State>> = new Set();
     let previousState: State = state;
-    let { enabled = true, instantListenerExecution = false } = options;
+    let { enabled = true, instantListenerExecution = true } = options;
 
     const storeApi: Store<State> = {
         on: <
@@ -124,9 +124,9 @@ export const store = function <State extends any> (state: State, options: StoreO
                 }
             });
         },
-        subscribe (listener: StoreListener<State>) {
+        subscribe (listener: StoreListener<State>, instantExecute: boolean = true) {
             listeners.add(listener);
-            if (instantListenerExecution) listener(state);
+            if (instantExecute && instantListenerExecution) listener(state);
             return () => listeners.delete(listener);
         },
         enableOn (marker: Marker<State>, state?: State) {

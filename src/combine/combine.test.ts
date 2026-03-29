@@ -37,9 +37,9 @@ describe('combine()', () => {
         combined.subscribe(spy);
         s1.set(5);
         s2.set('z');
-        expect(spy).toHaveBeenCalledTimes(0);
-        await delay(10);
         expect(spy).toHaveBeenCalledTimes(1);
+        await delay(10);
+        expect(spy).toHaveBeenCalledTimes(2);
         expect(spy).toHaveBeenCalledWith('5-z');
     });
 
@@ -50,7 +50,7 @@ describe('combine()', () => {
         s1.set(10);
         unsubscribe();
         s1.set(11);
-        expect(spy).toHaveBeenCalledTimes(0);
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     
@@ -69,10 +69,11 @@ describe('combine()', () => {
         const spy      = vi.fn();
         combined.subscribe(spy);
         s1.set(999);
-        expect(spy).toHaveBeenCalledTimes(0);
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(combined.get()).toBe('1-a'); // unchanged
         await delay(100);
-        expect(spy).toHaveBeenCalledTimes(0);
+        expect(combined.get()).toBe('1-a'); // unchanged
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it('can enable and disable via markers', async () => {
